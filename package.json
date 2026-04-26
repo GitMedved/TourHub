@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
+    "@react-leaflet/core": "^2.1.0",
+    "@tanstack/react-query": "^4.36.1",
+    "axios": "^1.6.2",
+    "chart.js": "^4.4.0",
+    "date-fns": "^2.30.0",
+    "framer-motion": "^10.16.16",
+    "jwt-decode": "^4.0.0",
+    "leaflet": "^1.9.4",
+    "leaflet-routing-machine": "^3.2.12",
+    "leaflet.markercluster": "^1.5.3",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "react-icons": "^4.12.0",
+    "react-leaflet": "^4.2.1",
+    "react-modal": "^3.16.1",
+    "react-router-dom": "^6.20.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0"
+  }
+}
