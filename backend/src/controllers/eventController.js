@@ -1,39 +1,54 @@
 const Event = require('../models/Event');
+const Seller = require('../models/Seller');
 
 const getAllEvents = async (req, res) => {
   try {
-    const events = await Event.findAll();
-    res.json({
-      content: events,
-      totalPages: 1,
-      totalElements: events.length,
-      page: 1,
-      size: events.length
+    const events = await Event.findAll({
+      where: { isPublished: true, moderationStatus: 'approved' },
+      include: [{ model: Seller, attributes: ['companyName', 'rating', 'reviewCount'] }],
+      order: [['rating', 'DESC'], ['reviewCount', 'DESC']]
     });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    
+    const eventsWithSeller = events.map(event => {
+      const plain = event.get({ plain: true });
+      return {
+        ...plain,
+        sellerCompanyName: plain.Seller?.companyName || null,
+        sellerRating: plain.Seller?.rating || 0,
+        sellerReviewCount: plain.Seller?.reviewCount || 0
+      };
+    });
+    
+    res.json({ content: eventsWithSeller, totalPages: 1, totalElements: events.length, page: 1, size: events.length });
+  } catch (error) { console.error('getAllEvents error:', error); res.status(500).json({ error: error.message }); }
 };
 
 const getEventById = async (req, res) => {
   try {
-    const event = await Event.findByPk(req.params.id);
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-    res.json(event);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    const event = await Event.findByPk(req.params.id, {
+      include: [{ model: Seller, attributes: ['companyName', 'rating', 'reviewCount'] }]
+    });
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    const plain = event.get({ plain: true });
+    res.json({
+      ...plain,
+      sellerCompanyName: plain.Seller?.companyName || null,
+      sellerRating: plain.Seller?.rating || 0,
+      sellerReviewCount: plain.Seller?.reviewCount || 0
+    });
+  } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
 const createEvent = async (req, res) => {
   try {
-    const event = await Event.create(req.body);
+    const seller = await Seller.findOne({ where: { userId: req.user.id } });
+    if (!seller) return res.status(400).json({ error: 'Seller profile not found' });
+    const event = await Event.create({
+      ...req.body, sellerId: seller.id,
+      isPublished: false, moderationStatus: 'pending'
+    });
     res.status(201).json(event);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
 module.exports = { getAllEvents, getEventById, createEvent };

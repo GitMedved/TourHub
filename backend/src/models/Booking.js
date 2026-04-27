@@ -19,8 +19,6 @@ const Booking = sequelize.define('Booking', {
   cancellationReason: DataTypes.TEXT,
   userId: { type: DataTypes.INTEGER, allowNull: false },
   eventId: { type: DataTypes.INTEGER, allowNull: false }
-}, { 
-  timestamps: true
-});
+}, { timestamps: true });
 
 module.exports = Booking;

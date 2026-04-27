@@ -7,6 +7,19 @@ const { authMiddleware } = require('../middleware/auth');
 // Все маршруты требуют аутентификации
 router.use(authMiddleware);
 
+// Загрузка временного изображения (без eventId)
+router.post('/temp', upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const url = `/uploads/events/${req.file.filename}`;
+    res.json({ url, path: url, filename: req.file.filename });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Загрузка изображения для события
 router.post('/events/:eventId/images', upload.single('image'), uploadEventImage);
 

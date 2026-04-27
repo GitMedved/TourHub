@@ -21,7 +21,7 @@ const Event = sequelize.define('Event', {
   durationDays: { type: DataTypes.INTEGER, defaultValue: 1 },
   maxParticipants: { type: DataTypes.INTEGER, defaultValue: 10 },
   isPublished: { type: DataTypes.BOOLEAN, defaultValue: false },
-  moderationStatus: { type: DataTypes.STRING, defaultValue: 'pending' }, // pending, approved, rejected
+  moderationStatus: { type: DataTypes.STRING, defaultValue: 'pending' },
   moderationComment: DataTypes.TEXT,
   rating: { type: DataTypes.DECIMAL(3, 1), defaultValue: 0 },
   reviewCount: { type: DataTypes.INTEGER, defaultValue: 0 },
@@ -29,9 +29,3 @@ const Event = sequelize.define('Event', {
 }, { timestamps: true });
 
 module.exports = Event;
-
-Event.hasMany(require('./Booking'), { foreignKey: 'eventId' });
-
-Event.hasMany(require('./Booking'), { foreignKey: 'eventId' });
-
-Event.hasMany(require('./Booking'), { foreignKey: 'eventId' });

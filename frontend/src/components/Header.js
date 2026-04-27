@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaUser, FaSignOutAlt, FaHome, FaStore, FaCrown, FaMapMarkerAlt, FaUserTie, FaSignInAlt, FaUserPlus } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaSignOutAlt, FaStore, FaUserTie, FaCrown } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
 const Header = () => {
@@ -9,9 +9,7 @@ const Header = () => {
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
+    if (userData) setUser(JSON.parse(userData));
   }, []);
 
   const handleLogout = () => {
@@ -22,80 +20,83 @@ const Header = () => {
     window.location.reload();
   };
 
-  const getRoleLink = () => {
+  const getDashboardLink = () => {
     if (!user) return null;
-    if (user.role === 'ADMIN') return { path: '/admin', label: 'Админ панель', icon: <FaCrown /> };
-    if (user.role === 'SELLER') return { path: '/seller', label: 'Кабинет продавца', icon: <FaStore /> };
-    if (user.role === 'MANAGER') return { path: '/manager', label: 'Кабинет менеджера', icon: <FaUserTie /> };
+    if (user.role === 'ADMIN') return { path: '/admin', label: 'Админ панель', icon: <FaCrown className="text-lg" /> };
+    if (user.role === 'SELLER') return { path: '/seller', label: 'Кабинет продавца', icon: <FaStore className="text-lg" /> };
+    if (user.role === 'MANAGER') return { path: '/manager', label: 'Панель управления', icon: <FaUserTie className="text-lg" /> };
     return null;
   };
 
-  const roleLink = getRoleLink();
+  const dashboardLink = getDashboardLink();
+  const isUser = user?.role === 'USER';
 
   return (
-    <header className="bg-white shadow-md z-50 px-6 py-3 flex items-center justify-between">
-      {/* Логотип - ссылка на главную */}
-      <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
-        <FaMapMarkerAlt className="text-blue-500 text-2xl" />
-        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-          TravelHub
-        </h1>
-      </Link>
-      
-      {/* Навигация */}
-      <div className="flex items-center gap-4">
-        {user ? (
-          <>
-            {/* Имя пользователя */}
-            <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
-              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-xs text-white">
-                {user.firstName?.[0]}{user.lastName?.[0]}
-              </div>
-              <span className="text-sm font-medium text-gray-700">
-                {user.firstName} {user.lastName}
-              </span>
-            </div>
-            
-            {/* Главная */}
-            <Link to="/" className="text-gray-600 hover:text-blue-500 transition flex items-center gap-2">
-              <FaHome /> Главная
-            </Link>
-            
-            {/* Ролевая ссылка (кабинет продавца/менеджера/админа) */}
-            {roleLink && (
-              <Link to={roleLink.path} className="text-gray-600 hover:text-blue-500 transition flex items-center gap-2">
-                {roleLink.icon} {roleLink.label}
-              </Link>
-            )}
-            
-            {/* Профиль */}
-            <Link to="/profile" className="text-gray-600 hover:text-blue-500 transition flex items-center gap-2">
-              <FaUser /> Профиль
-            </Link>
-            
-            {/* Выход */}
-            <button onClick={handleLogout} className="text-gray-600 hover:text-red-500 transition flex items-center gap-2">
-              <FaSignOutAlt /> Выход
-            </button>
-          </>
-        ) : (
-          <>
-            {/* Главная для неавторизованных */}
-            <Link to="/" className="text-gray-600 hover:text-blue-500 transition flex items-center gap-2">
-              <FaHome /> Главная
-            </Link>
-            
-            {/* Вход */}
-            <Link to="/login" className="text-gray-600 hover:text-blue-500 transition flex items-center gap-2">
-              <FaSignInAlt /> Вход
-            </Link>
-            
-            {/* Регистрация */}
-            <Link to="/register" className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition flex items-center gap-2">
-              <FaUserPlus /> Регистрация
-            </Link>
-          </>
-        )}
+    <header className="bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-40">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <FaMapMarkerAlt className="text-white text-base" />
+          </div>
+          <h1 className="text-lg font-semibold text-gray-800 tracking-tight">TravelHub</h1>
+        </Link>
+        
+        <div className="flex items-center gap-3">
+          {user ? (
+            <>
+              {isUser ? (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
+                    <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-xs text-white font-medium">
+                      {user.firstName?.[0]}{user.lastName?.[0]}
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">
+                      {user.firstName} {user.lastName}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={handleLogout} 
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+                    title="Выйти"
+                  >
+                    <FaSignOutAlt className="text-lg" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
+                    <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-xs text-white font-medium">
+                      {user.firstName?.[0]}{user.lastName?.[0]}
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">
+                      {user.firstName} {user.lastName}
+                    </span>
+                  </div>
+                  
+                  
+                  {dashboardLink && (
+                    <Link to={dashboardLink.path} className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-blue-500 hover:bg-blue-50 transition" title={dashboardLink.label}>
+                      {dashboardLink.icon}
+                    </Link>
+                  )}
+                  
+                  <button 
+                    onClick={handleLogout} 
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+                    title="Выйти"
+                  >
+                    <FaSignOutAlt className="text-lg" />
+                  </button>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="text-sm text-gray-500 hover:text-blue-500 transition">Вход</Link>
+              <Link to="/register" className="bg-blue-500 text-white px-4 py-1.5 rounded-full text-sm hover:bg-blue-600 transition">Регистрация</Link>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );

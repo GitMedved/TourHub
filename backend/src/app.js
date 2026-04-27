@@ -3,8 +3,11 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const cron = require('node-cron');
 
 dotenv.config();
+
+require('./models');
 
 const sequelize = require('./config/database');
 const initAdmin = require('./utils/initAdmin');
@@ -24,7 +27,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: false, contentSecurityPolicy: false }));
 app.use(express.json());
 app.use(morgan('dev'));
 app.use('/uploads', express.static('uploads'));
@@ -34,7 +37,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/seller', sellerRoutes);
-app.use('/api', messageRoutes);
+app.use('/api/messages', messageRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'OK', message: 'Server is running' }));
 
@@ -43,7 +46,35 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message });
 });
 
+const bookingRoutes = require('./routes/bookingRoutes');
+app.use('/api/bookings', bookingRoutes);
+const reviewRoutes = require("./routes/reviewRoutes");
+app.use("/api/reviews", reviewRoutes);
 const PORT = process.env.PORT || 5001;
+
+// Cron-задача: авто-завершение событий с истекшим сроком публикации
+cron.schedule('0 * * * *', async () => {
+  try {
+    const Event = require('./models/Event');
+    const { Op } = require('sequelize');
+    
+    const [updated] = await Event.update(
+      { isPublished: false, moderationStatus: 'completed' },
+      { 
+        where: { 
+          publishUntil: { [Op.lt]: new Date() },
+          isPublished: true 
+        } 
+      }
+    );
+    
+    if (updated > 0) {
+      console.log(`🕐 Auto-completed ${updated} events with expired publishUntil`);
+    }
+  } catch (error) {
+    console.error('Cron error:', error.message);
+  }
+});
 
 sequelize.sync({ alter: true }).then(async () => {
   console.log('✅ Database connected');
@@ -53,6 +84,3 @@ sequelize.sync({ alter: true }).then(async () => {
   console.error('❌ Database connection failed:', err.message);
   app.listen(PORT, () => console.log(`⚠️ Server running on port ${PORT} (without database)`));
 });
-
-const bookingRoutes = require('./routes/bookingRoutes');
-app.use('/api/bookings', bookingRoutes);
