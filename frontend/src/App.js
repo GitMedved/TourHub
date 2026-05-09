@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import SellerDashboard from './pages/SellerDashboard';
+import SellerProfilePage from './pages/SellerProfilePage';
 import ManagerDashboard from './pages/ManagerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ChatPage from './pages/ChatPage';
@@ -42,13 +43,6 @@ function AppContent() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [location.pathname]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    toast.success('Вы вышли из системы');
-  };
-
   const showSidebar = user?.role === 'USER' && 
     !['/login', '/register'].includes(location.pathname);
 
@@ -65,6 +59,7 @@ function AppContent() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/seller" element={<SellerDashboard />} />
+        <Route path="/seller/:id" element={<SellerProfilePage />} />
         <Route path="/seller/events/create" element={<CreateEventPage />} />
         <Route path="/manager" element={<ManagerDashboard />} />
         <Route path="/admin" element={<AdminDashboard />} />

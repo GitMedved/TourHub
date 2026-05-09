@@ -5,12 +5,47 @@ const User = require('../models/User');
 const Event = require('../models/Event');
 const Seller = require('../models/Seller');
 const Booking = require('../models/Booking');
+const Review = require('../models/Review');
 const { Op } = require('sequelize');
+
+// ========== ПОЛЬЗОВАТЕЛИ ==========
+router.get('/users', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Access denied' });
+    const users = await User.findAll({
+      attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'isActive', 'createdAt']
+    });
+    res.json(users);
+  } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+// ========== СТАТИСТИКА ==========
+router.get('/stats', authMiddleware, async (req, res) => {
+  try {
+    const [userCount, sellerCount, eventCount, bookingCount, reviewCount] = await Promise.all([
+      User.count(),
+      Seller.count(),
+      Event.count(),
+      Booking.count(),
+      Review.count()
+    ]);
+    
+    res.json({
+      users: userCount,
+      sellers: sellerCount,
+      events: eventCount,
+      bookings: bookingCount,
+      reviews: reviewCount
+    });
+  } catch (error) { res.status(500).json({ error: error.message }); }
+});
 
 // ========== ПРОДАВЦЫ ==========
 router.get('/sellers', authMiddleware, async (req, res) => {
   try {
-    const sellers = await Seller.findAll({ include: [{ model: User, attributes: ['email', 'firstName', 'lastName'] }] });
+    const sellers = await Seller.findAll({ 
+      include: [{ model: User, as: 'User', attributes: ['email', 'firstName', 'lastName'] }] 
+    });
     res.json(sellers);
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
@@ -38,7 +73,9 @@ router.put('/sellers/:id/reject', authMiddleware, async (req, res) => {
 // ========== СОБЫТИЯ ==========
 router.get('/events', authMiddleware, async (req, res) => {
   try {
-    const events = await Event.findAll({ include: [{ model: Seller, attributes: ['companyName'] }] });
+    const events = await Event.findAll({ 
+      include: [{ model: Seller, as: 'Seller', attributes: ['companyName'] }] 
+    });
     res.json(events);
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
@@ -100,8 +137,8 @@ router.get('/bookings', authMiddleware, async (req, res) => {
   try {
     const bookings = await Booking.findAll({
       include: [
-        { model: User, attributes: ['firstName', 'lastName', 'email'] },
-        { model: Event, attributes: ['title'] }
+        { model: User, as: 'user', attributes: ['firstName', 'lastName', 'email'] },
+        { model: Event, as: 'event', attributes: ['title'] }
       ],
       order: [['createdAt', 'DESC']]
     });

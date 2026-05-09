@@ -12,7 +12,7 @@ router.get('/event/:eventId', async (req, res) => {
   try {
     const reviews = await Review.findAll({
       where: { eventId: req.params.eventId, isApproved: true },
-      include: [{ model: User, attributes: ['firstName', 'lastName'] }],
+      include: [{ model: User, as: 'user', attributes: ['firstName', 'lastName'] }],
       order: [['createdAt', 'DESC']]
     });
     res.json(reviews);
@@ -24,7 +24,10 @@ router.get('/seller/:sellerId', async (req, res) => {
   try {
     const reviews = await Review.findAll({
       where: { sellerId: req.params.sellerId, isApproved: true },
-      include: [{ model: User, attributes: ['firstName', 'lastName'] }, { model: Event, attributes: ['title'] }],
+      include: [
+        { model: User, as: 'user', attributes: ['firstName', 'lastName'] }, 
+        { model: Event, as: 'event', attributes: ['title'] }
+      ],
       order: [['createdAt', 'DESC']]
     });
     res.json(reviews);
@@ -38,9 +41,9 @@ router.get('/pending', authMiddleware, async (req, res) => {
     const reviews = await Review.findAll({
       where: { isApproved: false },
       include: [
-        { model: User, attributes: ['firstName', 'lastName'] },
-        { model: Event, attributes: ['title'] },
-        { model: Seller, attributes: ['companyName'] }
+        { model: User, as: 'user', attributes: ['firstName', 'lastName'] },
+        { model: Event, as: 'event', attributes: ['title'] },
+        { model: Seller, as: 'seller', attributes: ['companyName'] }
       ],
       order: [['createdAt', 'DESC']]
     });

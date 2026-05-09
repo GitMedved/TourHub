@@ -10,6 +10,10 @@ const Seller = sequelize.define('Seller', {
   address: DataTypes.STRING,
   inn: DataTypes.STRING,
   ogrn: DataTypes.STRING,
+  website: DataTypes.STRING,
+  email: DataTypes.STRING,
+  rating: { type: DataTypes.FLOAT, defaultValue: 0 },
+  reviewCount: { type: DataTypes.INTEGER, defaultValue: 0 },
   approved: { type: DataTypes.BOOLEAN, defaultValue: false },
   moderationStatus: { type: DataTypes.STRING, defaultValue: 'pending' }
 }, { timestamps: true });

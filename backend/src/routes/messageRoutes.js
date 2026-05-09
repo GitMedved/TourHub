@@ -163,3 +163,91 @@ router.get('/seller/messages', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
+// ========== ЧАТ ПО БРОНИРОВАНИЮ (юзер-селлер) ==========
+
+// Получить сообщения по бронированию
+router.get('/booking/:bookingId', authMiddleware, async (req, res) => {
+  try {
+    const Booking = require('../models/Booking');
+    const booking = await Booking.findByPk(req.params.bookingId);
+    
+    if (!booking) {
+      return res.status(404).json({ error: 'Бронирование не найдено' });
+    }
+    
+    // Проверяем доступ
+    const isUser = booking.userId === req.user.id;
+    const isSeller = booking.sellerId === req.user.id;
+    const isManager = ['MANAGER', 'ADMIN'].includes(req.user.role);
+    
+    if (!isUser && !isSeller && !isManager) {
+      return res.status(403).json({ error: 'Нет доступа' });
+    }
+    
+    const conversationId = `booking_${req.params.bookingId}`;
+    
+    let messages = await Message.findAll({
+      where: { conversationId },
+      order: [['createdAt', 'ASC']]
+    });
+    
+    // Если сообщений нет, создаем приветственное
+    if (messages.length === 0) {
+      messages = [];
+    }
+    
+    res.json({
+      booking: {
+        id: booking.id,
+        eventTitle: booking.eventTitle || `Бронирование #${booking.id}`,
+        status: booking.status
+      },
+      messages: messages
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Отправить сообщение по бронированию
+router.post('/booking/:bookingId', authMiddleware, async (req, res) => {
+  try {
+    const Booking = require('../models/Booking');
+    const booking = await Booking.findByPk(req.params.bookingId);
+    
+    if (!booking) {
+      return res.status(404).json({ error: 'Бронирование не найдено' });
+    }
+    
+    const isUser = booking.userId === req.user.id;
+    const isSeller = booking.sellerId === req.user.id;
+    
+    if (!isUser && !isSeller) {
+      return res.status(403).json({ error: 'Нет доступа' });
+    }
+    
+    const message = req.body.text || req.body.message;
+    if (!message || !message.trim()) {
+      return res.status(400).json({ error: 'Текст обязателен' });
+    }
+    
+    const conversationId = `booking_${req.params.bookingId}`;
+    
+    const newMessage = await Message.create({
+      fromUserId: req.user.id,
+      fromUserName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.email,
+      fromUserRole: req.user.role,
+      toUserId: isUser ? booking.sellerId : booking.userId,
+      toUserName: isUser ? 'Продавец' : 'Покупатель',
+      message: message.trim(),
+      conversationId
+    });
+    
+    res.status(201).json(newMessage);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});

@@ -4,3 +4,22 @@ dist/
 .env
 *.log
 .DS_Store
+node_modules/
+# Dependencies
+
+# IDE
+.idea/
+.vscode/
+*.iml
+# OS
+Thumbs.db
+# Env
+.env.local
+.env.*.local
+# Logs
+logs/
+# Build
+.next/
+# Test images / temp files
+real-image.jpg
+*.tmp

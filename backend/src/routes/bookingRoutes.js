@@ -1,21 +1,47 @@
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
-const Booking = require('../models/Booking');
-const Event = require('../models/Event');
-const User = require('../models/User');
-const Review = require('../models/Review');
+const { Booking, Event, User, Seller } = require('../models');
 const { Op } = require('sequelize');
 
-const CANCEL_REASONS = [
-  'Планы изменились',
-  'Нашёл более выгодное предложение',
-  'Не подходит дата',
-  'Проблемы со здоровьем',
-  'Финансовые трудности',
-  'Не устроили условия',
-  'Другое'
-];
+// Получить бронирования пользователя
+router.get('/my', authMiddleware, async (req, res) => {
+  try {
+    const bookings = await Booking.findAll({
+      where: { userId: req.user.id },
+      include: [
+        { model: Event, as: 'event' },
+        { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json({ content: bookings });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Получить бронирования продавца
+router.get('/seller', authMiddleware, async (req, res) => {
+  try {
+    const seller = await Seller.findOne({ where: { userId: req.user.id } });
+    if (!seller) return res.status(404).json({ error: 'Seller not found' });
+    
+    const bookings = await Booking.findAll({
+      where: { sellerId: seller.id },
+      include: [
+        { model: Event, as: 'event' },
+        { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(bookings);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Создать бронирование
 router.post('/', authMiddleware, async (req, res) => {
@@ -25,132 +51,106 @@ router.post('/', authMiddleware, async (req, res) => {
     const event = await Event.findByPk(eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
     
-    const totalPrice = parseFloat(event.price) * parseInt(participants);
-    const bookingNumber = `BKG${Date.now()}${Math.floor(Math.random() * 1000)}`;
-    
     const booking = await Booking.create({
-      bookingNumber, eventId, userId: req.user.id,
-      participants: parseInt(participants), totalPrice,
-      contactName, contactPhone, contactEmail,
-      specialRequests, eventDate, status: 'CREATED'
+      eventId,
+      userId: req.user.id,
+      sellerId: event.sellerId,
+      participants,
+      contactName,
+      contactPhone,
+      contactEmail,
+      specialRequests,
+      eventDate,
+      totalPrice: event.price * participants,
+      bookingNumber: 'BKG' + Date.now() + Math.floor(Math.random() * 1000),
+      status: 'CREATED',
+      paymentStatus: 'UNPAID'
     });
     
     res.status(201).json(booking);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// Мои бронирования (юзер)
-router.get('/my', authMiddleware, async (req, res) => {
-  try {
-    const bookings = await Booking.findAll({
-      where: { userId: req.user.id },
-      include: [{ model: Event, attributes: ['id', 'title', 'address', 'price', 'previewImage', 'sellerId'] }],
-      order: [['createdAt', 'DESC']]
-    });
-    res.json({ content: bookings });
-  } catch (error) { res.status(500).json({ error: error.message }); }
-});
-
-// Бронирования продавца (раздел Продажи)
-router.get('/seller', authMiddleware, async (req, res) => {
-  try {
-    const Seller = require('../models/Seller');
-    const seller = await Seller.findOne({ where: { userId: req.user.id } });
-    if (!seller) return res.status(400).json({ error: 'Seller not found' });
-    
-    const events = await Event.findAll({ where: { sellerId: seller.id }, attributes: ['id'] });
-    const eventIds = events.map(e => e.id);
-    
-    const bookings = await Booking.findAll({
-      where: { eventId: { [Op.in]: eventIds } },
-      include: [
-        { model: Event, attributes: ['id', 'title', 'price'] },
-        { model: User, attributes: ['id', 'firstName', 'lastName', 'email'] }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
-    
-    res.json({ content: bookings });
-  } catch (error) { res.status(500).json({ error: error.message }); }
-});
-
-// Отменить бронирование (юзер)
+// Отменить бронирование
 router.put('/:id/cancel', authMiddleware, async (req, res) => {
   try {
     const booking = await Booking.findByPk(req.params.id);
-    if (!booking) return res.status(404).json({ error: 'Not found' });
-    if (booking.userId !== req.user.id) return res.status(403).json({ error: 'Access denied' });
-    
-    await booking.update({ 
-      status: 'CANCELLED_BY_USER', 
-      cancelledAt: new Date(),
-      cancellationReason: req.body.reason || 'Отменено пользователем'
-    });
-    res.json(booking);
-  } catch (error) { res.status(500).json({ error: error.message }); }
-});
-
-// Отменить бронирование (продавец)
-router.put('/:id/cancel-seller', authMiddleware, async (req, res) => {
-  try {
-    const Seller = require('../models/Seller');
-    const seller = await Seller.findOne({ where: { userId: req.user.id } });
-    if (!seller) return res.status(400).json({ error: 'Seller not found' });
-    
-    const booking = await Booking.findByPk(req.params.id, {
-      include: [{ model: Event, where: { sellerId: seller.id } }]
-    });
     if (!booking) return res.status(404).json({ error: 'Booking not found' });
     
-    await booking.update({ 
-      status: 'CANCELLED_BY_SELLER', 
-      cancelledAt: new Date(),
-      cancellationReason: req.body.reason || 'Отменено продавцом'
-    });
+    if (booking.userId !== req.user.id && booking.sellerId !== req.user.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    booking.status = 'CANCELLED_BY_USER';
+    booking.cancellationReason = req.body.reason || req.body.cancelReason;
+    booking.cancelledAt = new Date();
+    await booking.save();
+    
     res.json(booking);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// Завершить бронирование (юзер)
+// Завершить бронирование
 router.put('/:id/complete', authMiddleware, async (req, res) => {
   try {
     const booking = await Booking.findByPk(req.params.id);
-    if (!booking) return res.status(404).json({ error: 'Not found' });
-    if (booking.userId !== req.user.id) return res.status(403).json({ error: 'Access denied' });
+    if (!booking) return res.status(404).json({ error: 'Booking not found' });
     
-    await booking.update({ status: 'COMPLETED', completedAt: new Date() });
+    if (booking.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    booking.status = 'COMPLETED';
+    booking.completedAt = new Date();
+    await booking.save();
+    
     res.json(booking);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// Получить причины отмены
-router.get('/cancel-reasons', authMiddleware, (req, res) => {
-  res.json(CANCEL_REASONS);
-});
-
-// Создать отзыв
+// Оставить отзыв
 router.post('/:id/review', authMiddleware, async (req, res) => {
   try {
-    const booking = await Booking.findByPk(req.params.id, {
-      include: [{ model: Event }]
-    });
+    const booking = await Booking.findByPk(req.params.id);
     if (!booking) return res.status(404).json({ error: 'Booking not found' });
-    if (booking.userId !== req.user.id) return res.status(403).json({ error: 'Access denied' });
-    if (booking.status !== 'COMPLETED') return res.status(400).json({ error: 'Бронирование не завершено' });
+    
+    if (booking.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
     
     const { eventRating, sellerRating, comment } = req.body;
-    if (!eventRating || eventRating < 1 || eventRating > 5 || !sellerRating || sellerRating < 1 || sellerRating > 5) return res.status(400).json({ error: 'Рейтинг от 1 до 5' });
+    
+    const Review = require('../models/Review');
+    const existingReview = await Review.findOne({ where: { bookingId: booking.id } });
+    if (existingReview) {
+      return res.status(400).json({ error: 'Отзыв уже оставлен' });
+    }
     
     const review = await Review.create({
-      eventRating, sellerRating, comment,
-      userId: req.user.id,
       eventId: booking.eventId,
-      sellerId: booking.Event.sellerId,
-      bookingId: booking.id
+      sellerId: booking.sellerId,
+      userId: req.user.id,
+      bookingId: booking.id,
+      eventRating,
+      sellerRating,
+      comment,
+      isApproved: false
     });
     
     res.status(201).json(review);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = router;

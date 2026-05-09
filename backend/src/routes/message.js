@@ -1,207 +1,109 @@
 const express = require('express');
 const router = express.Router();
-const { Message, Booking, User, Event } = require('../models');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
+const Message = require('../models/Message');
+const Booking = require('../models/Booking');
 const { Op } = require('sequelize');
 
-router.get('/booking/:bookingId', authenticateToken, async (req, res) => {
+// Get messages for user-seller chat (only for CONFIRMED bookings)
+router.get('/booking/:bookingId', authenticate, async (req, res) => {
   try {
-    const { bookingId } = req.params;
-    const userId = req.user.id;
-    const userRole = req.user.role;
-
-    const booking = await Booking.findByPk(bookingId, {
-      include: [
-        { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
-        { model: User, as: 'seller', attributes: ['id', 'name', 'email'] },
-        { model: Event, attributes: ['id', 'title'] }
-      ]
-    });
-
+    const booking = await Booking.findByPk(req.params.bookingId);
     if (!booking) {
       return res.status(404).json({ error: 'Бронирование не найдено' });
     }
 
-    const isUser = booking.userId === userId;
-    const isSeller = booking.sellerId === userId;
-    const isManager = ['manager', 'admin'].includes(userRole);
+    // Check if user is participant
+    if (req.user.id !== booking.userId && req.user.id !== booking.sellerId && req.user.role !== 'manager') {
+      return res.status(403).json({ error: 'Нет доступа' });
+    }
 
-    if (!isUser && !isSeller && !isManager) {
-      return res.status(403).json({ error: 'Нет доступа к этому чату' });
+    // Only confirmed bookings can have chat
+    if (booking.status !== 'CONFIRMED' && booking.status !== 'COMPLETED') {
+      return res.status(400).json({ error: 'Чат доступен только для подтвержденных бронирований' });
     }
 
     const messages = await Message.findAll({
-      where: { bookingId: parseInt(bookingId) },
-      order: [['created_at', 'ASC']],
-      include: [
-        { 
-          model: User, 
-          as: 'sender', 
-          attributes: ['id', 'name', 'email', 'role'] 
-        }
-      ]
+      where: { bookingId: req.params.bookingId },
+      order: [['createdAt', 'ASC']]
     });
 
-    if (isUser || isSeller) {
-      await Message.update(
-        { read: true },
-        {
-          where: {
-            bookingId: parseInt(bookingId),
-            receiverId: userId,
-            read: false
-          }
-        }
-      );
-    }
-
-    res.json({
-      booking: {
-        id: booking.id,
-        eventTitle: booking.Event?.title,
-        status: booking.status,
-        dates: booking.dates
-      },
-      participant: isUser ? booking.seller : booking.user,
-      messages: messages
-    });
+    res.json(messages);
   } catch (error) {
-    console.error('Error fetching messages:', error);
-    res.status(500).json({ error: 'Ошибка загрузки сообщений' });
+    res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/booking/:bookingId', authenticateToken, async (req, res) => {
+// Send message in booking chat
+router.post('/booking/:bookingId', authenticate, async (req, res) => {
   try {
-    const { bookingId } = req.params;
-    const { text } = req.body;
-    const userId = req.user.id;
-
-    if (!text || text.trim().length === 0) {
-      return res.status(400).json({ error: 'Текст сообщения не может быть пустым' });
-    }
-
-    const booking = await Booking.findByPk(bookingId, {
-      include: [
-        { model: User, as: 'user', attributes: ['id'] },
-        { model: User, as: 'seller', attributes: ['id'] }
-      ]
-    });
-
+    const booking = await Booking.findByPk(req.params.bookingId);
     if (!booking) {
       return res.status(404).json({ error: 'Бронирование не найдено' });
     }
 
-    if (booking.status !== 'confirmed') {
-      return res.status(403).json({ 
-        error: 'Чат доступен только после подтверждения бронирования менеджером' 
-      });
+    if (booking.status !== 'CONFIRMED' && booking.status !== 'COMPLETED') {
+      return res.status(400).json({ error: 'Чат доступен только для подтвержденных бронирований' });
     }
 
-    const isUser = booking.userId === userId;
-    const isSeller = booking.sellerId === userId;
+    let senderRole, receiverId, receiverRole;
 
-    if (!isUser && !isSeller) {
-      return res.status(403).json({ error: 'Нет доступа к этому чату' });
+    if (req.user.role === 'user') {
+      senderRole = 'user';
+      receiverId = booking.sellerId;
+      receiverRole = 'seller';
+    } else if (req.user.role === 'seller') {
+      if (req.user.id !== booking.sellerId) {
+        return res.status(403).json({ error: 'Это не ваше бронирование' });
+      }
+      senderRole = 'seller';
+      receiverId = booking.userId;
+      receiverRole = 'user';
+    } else {
+      return res.status(400).json({ error: 'Только пользователь и продавец могут писать в этот чат' });
     }
-
-    const receiverId = isUser ? booking.sellerId : booking.userId;
 
     const message = await Message.create({
-      text: text.trim(),
-      senderId: userId,
-      receiverId: receiverId,
-      bookingId: parseInt(bookingId),
-      read: false
+      text: req.body.text,
+      senderId: req.user.id,
+      senderRole,
+      receiverId,
+      receiverRole,
+      bookingId: parseInt(req.params.bookingId),
+      isRead: false
     });
 
-    const messageWithSender = await Message.findByPk(message.id, {
-      include: [
-        { model: User, as: 'sender', attributes: ['id', 'name', 'role'] }
-      ]
-    });
-
-    res.status(201).json(messageWithSender);
+    res.status(201).json(message);
   } catch (error) {
-    console.error('Error sending message:', error);
-    res.status(500).json({ error: 'Ошибка отправки сообщения' });
+    res.status(500).json({ error: error.message });
   }
 });
 
-router.get('/my-chats', authenticateToken, async (req, res) => {
+// Get all chats for seller
+router.get('/seller', authenticate, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const userRole = req.user.role;
-
-    let whereCondition = {};
-    
-    if (userRole === 'user') {
-      whereCondition = { userId: userId };
-    } else if (userRole === 'seller') {
-      whereCondition = { sellerId: userId };
-    } else {
-      return res.json([]);
+    if (req.user.role !== 'seller') {
+      return res.status(403).json({ error: 'Только для продавцов' });
     }
 
     const bookings = await Booking.findAll({
       where: {
-        ...whereCondition,
-        status: 'confirmed'
-      },
-      include: [
-        { 
-          model: Event, 
-          attributes: ['id', 'title', 'imageUrl'] 
-        },
-        { 
-          model: User, 
-          as: 'user', 
-          attributes: ['id', 'name', 'email'],
-          required: false
-        },
-        { 
-          model: User, 
-          as: 'seller', 
-          attributes: ['id', 'name', 'email'],
-          required: false
-        }
-      ],
-      order: [['created_at', 'DESC']]
+        sellerId: req.user.id,
+        status: { [Op.in]: ['CONFIRMED', 'COMPLETED'] }
+      }
     });
 
-    const chatsWithLastMessage = await Promise.all(
-      bookings.map(async (booking) => {
-        const lastMessage = await Message.findOne({
-          where: { bookingId: booking.id },
-          order: [['created_at', 'DESC']],
-          include: [
-            { model: User, as: 'sender', attributes: ['id', 'name'] }
-          ]
-        });
+    const bookingIds = bookings.map(b => b.id);
 
-        const unreadCount = await Message.count({
-          where: {
-            bookingId: booking.id,
-            receiverId: userId,
-            read: false
-          }
-        });
+    const messages = await Message.findAll({
+      where: { bookingId: { [Op.in]: bookingIds } },
+      order: [['createdAt', 'DESC']],
+      limit: 100
+    });
 
-        return {
-          bookingId: booking.id,
-          event: booking.Event,
-          participant: userRole === 'user' ? booking.seller : booking.user,
-          lastMessage: lastMessage,
-          unreadCount: unreadCount,
-          createdAt: booking.createdAt
-        };
-      })
-    );
-
-    res.json(chatsWithLastMessage);
+    res.json(messages);
   } catch (error) {
-    console.error('Error fetching chats:', error);
-    res.status(500).json({ error: 'Ошибка загрузки чатов' });
+    res.status(500).json({ error: error.message });
   }
 });
 
