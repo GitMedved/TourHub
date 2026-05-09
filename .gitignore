@@ -23,3 +23,11 @@ logs/
 # Test images / temp files
 real-image.jpg
 *.tmp
+
+# Backend dependencies
+backend/node_modules/
+frontend/node_modules/
+
+# Test files
+backend/real-image.png
+**/real-image.*
