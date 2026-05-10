@@ -14,21 +14,30 @@ const User = sequelize.define('User', {
   phone: DataTypes.STRING,
   avatar: DataTypes.STRING,
   lastLogin: DataTypes.DATE
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  indexes: [
+    { fields: ['email'] },
+    { fields: ['role'] },
+    { fields: ['isActive'] }
+  ]
+});
 
-User.beforeCreate = async (user) => {
+User.addHook('beforeCreate', async (user) => {
   if (user.password) {
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
+    user.email = user.email.trim().toLowerCase();
+    user.password = await bcrypt.hash(user.password.trim(), 10);
   }
-};
+});
+
+User.addHook('beforeUpdate', async (user) => {
+  if (user.changed('password')) {
+    user.password = await bcrypt.hash(user.password.trim(), 10);
+  }
+});
 
 User.prototype.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  return bcrypt.compare(candidatePassword.trim(), this.password);
 };
 
 module.exports = User;
-
-User.hasMany(require('./Booking'), { foreignKey: 'userId' });
-
-User.hasMany(require('./Booking'), { foreignKey: 'userId' });
