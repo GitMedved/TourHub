@@ -26,6 +26,16 @@ const Event = sequelize.define('Event', {
   rating: { type: DataTypes.DECIMAL(3, 1), defaultValue: 0 },
   reviewCount: { type: DataTypes.INTEGER, defaultValue: 0 },
   sellerId: { type: DataTypes.INTEGER, allowNull: false }
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  indexes: [
+    { fields: ['sellerId'] },
+    { fields: ['isPublished'] },
+    { fields: ['moderationStatus'] },
+    { fields: ['category'] },
+    { fields: ['rating'] },
+    { fields: ['startDate'] }
+  ]
+});
 
 module.exports = Event;

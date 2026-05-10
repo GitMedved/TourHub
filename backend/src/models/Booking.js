@@ -18,7 +18,17 @@ const Booking = sequelize.define('Booking', {
   cancelledAt: DataTypes.DATE,
   cancellationReason: DataTypes.TEXT,
   userId: { type: DataTypes.INTEGER, allowNull: false },
-  eventId: { type: DataTypes.INTEGER, allowNull: false }
-}, { timestamps: true });
+  eventId: { type: DataTypes.INTEGER, allowNull: false },
+  sellerId: DataTypes.INTEGER
+}, {
+  timestamps: true,
+  indexes: [
+    { fields: ['userId'] },
+    { fields: ['eventId'] },
+    { fields: ['sellerId'] },
+    { fields: ['status'] },
+    { fields: ['bookingNumber'] }
+  ]
+});
 
 module.exports = Booking;
