@@ -7,12 +7,8 @@ const Seller = require('../models/Seller');
 
 // Публичные маршруты
 router.get('/', getAllEvents);
-router.get('/:id', getEventById);
 
-// Создание события (только авторизованные)
-router.post('/', authMiddleware, createEvent);
-
-// Получить события продавца (ВСЕ, включая неопубликованные)
+// Получить события продавца (ВСЕ, включая неопубликованные). Этот маршрут должен быть до /:id.
 router.get('/seller/my', authMiddleware, async (req, res) => {
   try {
     const seller = await Seller.findOne({ where: { userId: req.user.id } });
@@ -28,6 +24,11 @@ router.get('/seller/my', authMiddleware, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+router.get('/:id', getEventById);
+
+// Создание события (только авторизованные)
+router.post('/', authMiddleware, createEvent);
 
 // Обновить событие
 router.put('/:id', authMiddleware, async (req, res) => {

@@ -34,7 +34,8 @@ const Event = sequelize.define('Event', {
     { fields: ['moderationStatus'] },
     { fields: ['category'] },
     { fields: ['rating'] },
-    { fields: ['startDate'] }
+    { fields: ['startDate'] },
+    { fields: ['isPublished', 'moderationStatus', 'startDate'] }
   ]
 });
 

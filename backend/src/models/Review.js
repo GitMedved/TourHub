@@ -11,6 +11,14 @@ const Review = sequelize.define('Review', {
   eventId: { type: DataTypes.INTEGER, allowNull: false },
   sellerId: { type: DataTypes.INTEGER, allowNull: false },
   bookingId: { type: DataTypes.INTEGER, allowNull: false }
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  indexes: [
+    { fields: ['eventId', 'isApproved'] },
+    { fields: ['sellerId', 'isApproved'] },
+    { fields: ['bookingId'], unique: true },
+    { fields: ['userId'] }
+  ]
+});
 
 module.exports = Review;

@@ -25,5 +25,12 @@
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0"
+  },
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "start": "bash scripts/full-start.sh",
+    "stop": "bash scripts/stop-all.sh",
+    "restart": "bash scripts/restart-all.sh",
+    "doctor": "bash scripts/doctor.sh"
   }
 }

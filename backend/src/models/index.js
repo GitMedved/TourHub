@@ -4,6 +4,7 @@ const Event = require('./Event');
 const Booking = require('./Booking');
 const Message = require('./Message');
 const Review = require('./Review');
+const Wishlist = require('./Wishlist');
 
 // User - Booking
 User.hasMany(Booking, { foreignKey: 'userId', as: 'bookings' });
@@ -37,11 +38,18 @@ Review.belongsTo(Seller, { foreignKey: 'sellerId', as: 'seller' });
 Booking.hasOne(Review, { foreignKey: 'bookingId', as: 'review' });
 Review.belongsTo(Booking, { foreignKey: 'bookingId', as: 'booking' });
 
+// User/Event - Wishlist
+User.hasMany(Wishlist, { foreignKey: 'userId', as: 'wishlistItems' });
+Wishlist.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+Event.hasMany(Wishlist, { foreignKey: 'eventId', as: 'wishlistItems' });
+Wishlist.belongsTo(Event, { foreignKey: 'eventId', as: 'event' });
+
 module.exports = {
   User,
   Seller,
   Event,
   Booking,
   Message,
-  Review
+  Review,
+  Wishlist
 };

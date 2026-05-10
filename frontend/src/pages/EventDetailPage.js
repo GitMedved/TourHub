@@ -1,7 +1,7 @@
 import LoadingScreen from '../components/LoadingScreen';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FaStar, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaArrowLeft, FaComment, FaQuestionCircle } from 'react-icons/fa';
+import { FaStar, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaArrowLeft, FaQuestionCircle, FaHeart, FaRegHeart, FaShareAlt } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import Header from '../components/Header';
@@ -57,7 +57,7 @@ const EventReviews = ({ eventId }) => {
           <div key={review.id} className="bg-white rounded-xl shadow-sm p-4">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <p className="font-medium">{review.User?.firstName} {review.User?.lastName}</p>
+                <p className="font-medium">{review.user?.firstName || review.User?.firstName} {review.user?.lastName || review.User?.lastName}</p>
                 <p className="text-sm text-gray-400">{new Date(review.createdAt).toLocaleDateString('ru-RU')}</p>
               </div>
               <div className="flex items-center gap-3">
@@ -95,6 +95,8 @@ const EventDetailPage = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [phoneError, setPhoneError] = useState('');
   const [dateError, setDateError] = useState('');
+  const [wishlistSaved, setWishlistSaved] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
   const [bookingData, setBookingData] = useState({
     participants: 1, contactName: '', contactPhone: '', contactEmail: '', specialRequests: '', eventDate: ''
   });
@@ -172,6 +174,35 @@ const EventDetailPage = () => {
     loadEvent();
   }, [id]);
 
+  useEffect(() => {
+    if (!event) return;
+
+    const previousTitle = document.title;
+    const metaDescription = document.querySelector('meta[name="description"]');
+    const previousDescription = metaDescription?.getAttribute('content');
+
+    document.title = `${event.title} — TourHub`;
+    metaDescription?.setAttribute('content', event.shortDescription || event.fullDescription || 'Тур на TourHub');
+
+    return () => {
+      document.title = previousTitle;
+      if (previousDescription) metaDescription?.setAttribute('content', previousDescription);
+    };
+  }, [event]);
+
+  useEffect(() => {
+    if (!user || !id) return;
+
+    (async () => {
+      try {
+        const response = await api.get(`/wishlist/${id}/status`);
+        setWishlistSaved(Boolean(response.data.saved));
+      } catch (error) {
+        console.error('Wishlist status error:', error);
+      }
+    })();
+  }, [user, id]);
+
   const loadEvent = async () => {
     try {
       const response = await api.get(`/events/${id}`);
@@ -199,6 +230,49 @@ const EventDetailPage = () => {
       toast.success('Бронирование создано!');
       setShowBookingForm(false);
     } catch (error) { toast.error('Ошибка бронирования'); }
+  };
+
+  const toggleWishlist = async () => {
+    if (!user) { toast.error('Войдите в систему'); navigate('/login'); return; }
+    if (wishlistLoading) return;
+
+    setWishlistLoading(true);
+    try {
+      if (wishlistSaved) {
+        await api.delete(`/wishlist/${event.id}`);
+        setWishlistSaved(false);
+        toast.success('Удалено из избранного');
+      } else {
+        await api.post(`/wishlist/${event.id}`);
+        setWishlistSaved(true);
+        toast.success('Сохранено в избранное');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Не удалось обновить избранное');
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  const shareEvent = async () => {
+    const shareData = { title: event.title, text: event.shortDescription || 'Посмотрите тур на TourHub', url: window.location.href };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+      }
+    }
+
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success('Ссылка скопирована');
+      return;
+    }
+
+    toast('Скопируйте ссылку из адресной строки');
   };
 
   const askQuestion = async () => {
@@ -243,7 +317,11 @@ const EventDetailPage = () => {
             
             <div className="flex items-center justify-between pt-4 border-t">
               <div className="text-2xl font-bold text-blue-600">${parseFloat(event.price).toFixed(2)}</div>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3 justify-end">
+                <button onClick={toggleWishlist} disabled={wishlistLoading} className={`px-5 py-2.5 rounded-full text-sm font-medium transition flex items-center gap-2 ${wishlistSaved ? 'bg-rose-50 text-rose-600 hover:bg-rose-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                  {wishlistSaved ? <FaHeart /> : <FaRegHeart />} {wishlistSaved ? 'Сохранено' : 'В избранное'}
+                </button>
+                <button onClick={shareEvent} className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 transition flex items-center gap-2"><FaShareAlt /> Поделиться</button>
                 {user?.role === 'USER' && (
                   <button onClick={() => setShowBookingForm(!showBookingForm)} className="px-5 py-2.5 bg-green-500 text-white rounded-full text-sm font-medium hover:bg-green-600 transition">
                     {showBookingForm ? 'Скрыть' : 'Забронировать'}

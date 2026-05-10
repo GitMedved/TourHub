@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { getJwtSecret } = require('../config/env');
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -10,7 +11,7 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ error: 'Please authenticate' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, getJwtSecret());
     const user = await User.findByPk(decoded.id);
 
     if (!user || !user.isActive) {
@@ -32,4 +33,4 @@ const requireRole = (...roles) => (req, res, next) => {
   next();
 };
 
-module.exports = { authMiddleware, requireRole };
+module.exports = { authMiddleware, authenticate: authMiddleware, requireRole };

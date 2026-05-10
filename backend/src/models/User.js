@@ -31,6 +31,10 @@ User.addHook('beforeCreate', async (user) => {
 });
 
 User.addHook('beforeUpdate', async (user) => {
+  if (user.changed('email') && user.email) {
+    user.email = user.email.trim().toLowerCase();
+  }
+
   if (user.changed('password')) {
     user.password = await bcrypt.hash(user.password.trim(), 10);
   }

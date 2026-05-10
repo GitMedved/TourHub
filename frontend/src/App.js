@@ -16,6 +16,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ChatPage from './pages/ChatPage';
 import CreateEventPage from './pages/CreateEventPage';
 import Sidebar from './components/Sidebar';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -103,7 +104,9 @@ function App() {
             style: { background: '#363636', color: '#fff', borderRadius: '12px', fontSize: '14px' }
           }}
         />
-        <AppContent />
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
       </Router>
     </QueryClientProvider>
   );

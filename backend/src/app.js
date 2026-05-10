@@ -16,13 +16,22 @@ const messageRoutes = require('./routes/messageRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const sellerRoutes = require('./routes/sellerRoutes');
+const wishlistRoutes = require('./routes/wishlistRoutes');
 
 const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
+const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:3000')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
@@ -51,8 +60,20 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/sellers', sellerRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
+app.get('/api/health', async (req, res, next) => {
+  try {
+    await sequelize.authenticate();
+    res.json({ status: 'ok', database: 'ok', time: new Date() });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
 
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
@@ -76,7 +97,16 @@ const PORT = process.env.PORT || 5001;
 
 sequelize.sync({ alter: true }).then(() => {
   console.log('Database synced');
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Run \`bash scripts/stop-all.sh\` from the project root or set a different PORT in backend/.env.`);
+      process.exit(1);
+    }
+
+    throw error;
+  });
 }).catch(err => {
   console.error('Database sync error:', err);
 });

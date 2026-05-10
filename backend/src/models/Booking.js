@@ -27,7 +27,10 @@ const Booking = sequelize.define('Booking', {
     { fields: ['eventId'] },
     { fields: ['sellerId'] },
     { fields: ['status'] },
-    { fields: ['bookingNumber'] }
+    { fields: ['bookingNumber'] },
+    { fields: ['sellerId', 'status'] },
+    { fields: ['userId', 'status'] },
+    { fields: ['eventId', 'eventDate'] }
   ]
 });
 
