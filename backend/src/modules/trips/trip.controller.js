@@ -115,11 +115,58 @@ async function addComment(req, res, next) {
   }
 }
 
+async function createInvite(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const invite =
+      await tripService.createInviteLink(
+        req.params.tripId,
+        req.user.id
+      );
+
+    res.json({
+      inviteUrl:
+        `${process.env.CLIENT_URL}/join/${invite.token}`
+    });
+
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function joinByInvite(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const trip =
+      await tripService.joinTripByInvite(
+        req.params.token,
+        req.user.id
+      );
+
+    res.json(trip);
+
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   createTrip,
   getTrips,
   getTripById,
   addPlace,
   voteForPlace,
-  addComment
+  addComment,
+  createInvite,
+  joinByInvite
 };

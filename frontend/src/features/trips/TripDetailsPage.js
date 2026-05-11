@@ -18,7 +18,8 @@ import {
   getTrips,
   addPlace,
   addComment,
-  voteForPlace
+  voteForPlace,
+  createInvite
 } from './trips.api';
 
 export default function TripDetailsPage() {
@@ -106,6 +107,10 @@ export default function TripDetailsPage() {
       value
     }) => voteForPlace(placeId, value),
 
+    const inviteMutation = useMutation({
+      mutationFn: () => createInvite(id)
+    });
+
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['trips']
@@ -129,6 +134,23 @@ export default function TripDetailsPage() {
         <div className="bg-white rounded-3xl p-8 shadow mb-8">
 
           <div className="flex items-center justify-between">
+
+          <button
+            onClick={async () => {
+
+              const result =
+                await inviteMutation.mutateAsync();
+
+              await navigator.clipboard.writeText(
+                result.inviteUrl
+              );
+
+              alert('Invite link copied');
+            }}
+            className="bg-blue-600 text-white px-4 py-2 rounded-xl"
+          >
+            Invite people
+          </button>
 
             <div>
               <h1 className="text-4xl font-bold">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import JoinTripPage from './features/trips/JoinTripPage';
 
 import {
   BrowserRouter as Router,
@@ -31,6 +32,15 @@ import ErrorBoundary from './components/ErrorBoundary';
 import TripsPage from './features/trips/TripsPage';
 import TripDetailsPage from './features/trips/TripDetailsPage';
 import TripWorkspacePage from './features/trips/TripWorkspacePage';
+
+<Route
+  path="/join/:token"
+  element={
+    <ProtectedRoute>
+      <JoinTripPage />
+    </ProtectedRoute>
+  }
+/>
 
 const queryClient = new QueryClient({
   defaultOptions: {

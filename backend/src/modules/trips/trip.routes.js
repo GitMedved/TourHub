@@ -60,4 +60,15 @@ router.post(
   tripController.joinTrip
 );
 
+router.post(
+  '/:tripId/invite',
+  requireTripMember,
+  tripController.createInvite
+);
+
+router.post(
+  '/join/:token',
+  tripController.joinByInvite
+);
+
 module.exports = router;

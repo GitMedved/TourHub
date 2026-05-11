@@ -3,7 +3,8 @@ const {
   TripMember,
   TripPlace,
   TripVote,
-  TripComment
+  TripComment,
+  TripInvite
 } = require('./trip.associations');
 
 const User = require('../../models/User');
@@ -35,6 +36,8 @@ async function getUserTrips(userId) {
   const tripIds = memberships.map(
     (membership) => membership.tripId
   );
+
+  const crypto = require('crypto');
 
   return Trip.findAll({
     where: {
@@ -223,6 +226,71 @@ async function addMember(
   });
 }
 
+async function createInviteLink(
+  tripId,
+  userId
+) {
+
+  const token = crypto
+    .randomBytes(24)
+    .toString('hex');
+
+  const invite = await TripInvite.create({
+    token,
+    tripId,
+    invitedBy: userId,
+
+    expiresAt: new Date(
+      Date.now() + 1000 * 60 * 60 * 24 * 7
+    )
+  });
+
+  return invite;
+}
+
+async function joinTripByInvite(
+  token,
+  userId
+) {
+
+  const invite = await TripInvite.findOne({
+    where: { token }
+  });
+
+  if (!invite) {
+    throw new Error('Invite not found');
+  }
+
+  if (
+    invite.expiresAt < new Date()
+  ) {
+    throw new Error('Invite expired');
+  }
+
+  const existingMember =
+    await TripMember.findOne({
+      where: {
+        tripId: invite.tripId,
+        userId
+      }
+    });
+
+  if (!existingMember) {
+
+    await TripMember.create({
+      tripId: invite.tripId,
+      userId,
+      role: 'MEMBER'
+    });
+  }
+
+  invite.usedAt = new Date();
+
+  await invite.save();
+
+  return Trip.findByPk(invite.tripId);
+}
+
 module.exports = {
   createTrip,
   getUserTrips,
@@ -230,5 +298,7 @@ module.exports = {
   addPlaceToTrip,
   voteForPlace,
   addComment,
-  addMember
+  addMember,
+  createInviteLink,
+  joinTripByInvite
 };

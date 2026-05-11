@@ -1,5 +1,27 @@
 import api from '../../services/api';
 
+export const createInvite = async (
+  tripId
+) => {
+
+  const response = await api.post(
+    `/trips/${tripId}/invite`
+  );
+
+  return response.data;
+};
+
+export const joinTrip = async (
+  token
+) => {
+
+  const response = await api.post(
+    `/trips/join/${token}`
+  );
+
+  return response.data;
+};
+
 export const getTrips = async () => {
   const response = await api.get('/trips');
   return response.data;
