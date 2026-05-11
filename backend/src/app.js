@@ -2,10 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const cron = require('node-cron');
-const sequelize = require('./config/database');
-const Event = require('./models/Event');
-const { Op } = require('sequelize');
 const path = require('path');
 
 const authRoutes = require('./routes/authRoutes');
@@ -16,20 +12,34 @@ const messageRoutes = require('./routes/messageRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const sellerRoutes = require('./routes/sellerRoutes');
+const tripRoutes = require('./modules/trips/trip.routes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 
 const app = express();
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: 'cross-origin'
+    }
+  })
+);
 
-const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:3000')
+const allowedOrigins = (
+  process.env.CLIENT_URLS ||
+  process.env.CLIENT_URL ||
+  'http://localhost:3000'
+)
   .split(',')
   .map(origin => origin.trim())
   .filter(Boolean);
 
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true
@@ -38,19 +48,31 @@ app.use(cors({
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
-  message: { error: 'Too many attempts, try again in 15 minutes' }
+  message: {
+    error: 'Too many attempts, try again later'
+  }
 });
 
 const generalLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 200,
-  message: { error: 'Too many requests' }
+  message: {
+    error: 'Too many requests'
+  }
 });
 
 app.use(generalLimiter);
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({
+  extended: true,
+  limit: '10mb'
+}));
+
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, '../uploads'))
+);
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/events', eventRoutes);
@@ -61,54 +83,28 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/sellers', sellerRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/trips', tripRoutes);
 
-app.get('/api/health', async (req, res, next) => {
-  try {
-    await sequelize.authenticate();
-    res.json({ status: 'ok', database: 'ok', time: new Date() });
-  } catch (error) {
-    next(error);
-  }
+app.get('/api/health', async (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date()
+  });
 });
 
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({
+    error: 'Route not found'
+  });
 });
 
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
-});
+  console.error(err);
 
-cron.schedule('0 * * * *', async () => {
-  try {
-    console.log('Running auto-complete cron...');
-    await Event.update(
-      { status: 'COMPLETED' },
-      { where: { endDate: { [Op.lt]: new Date() }, status: 'ACTIVE' } }
-    );
-    console.log('Auto-complete cron finished');
-  } catch (error) {
-    console.error('Cron error:', error);
-  }
-});
-
-const PORT = process.env.PORT || 5001;
-
-sequelize.sync({ alter: true }).then(() => {
-  console.log('Database synced');
-  const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-  server.on('error', (error) => {
-    if (error.code === 'EADDRINUSE') {
-      console.error(`Port ${PORT} is already in use. Run \`bash scripts/stop-all.sh\` from the project root or set a different PORT in backend/.env.`);
-      process.exit(1);
-    }
-
-    throw error;
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error'
   });
-}).catch(err => {
-  console.error('Database sync error:', err);
 });
 
 module.exports = app;

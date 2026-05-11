@@ -17,6 +17,7 @@ import ChatPage from './pages/ChatPage';
 import CreateEventPage from './pages/CreateEventPage';
 import Sidebar from './components/Sidebar';
 import ErrorBoundary from './components/ErrorBoundary';
+import TripsPage from './features/trips/TripsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,6 +89,14 @@ function AppContent() {
         <Route path="/manager" element={<ProtectedRoute roles={['MANAGER', 'ADMIN']}><ManagerDashboard /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute roles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
+        <Route
+          path="/trips"
+          element={
+            <ProtectedRoute>
+              <TripsPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );
