@@ -2,7 +2,6 @@ import React, {
   useState,
   useEffect
 } from 'react';
-import socket from '../../socket';
 
 import {
   useParams
@@ -13,6 +12,8 @@ import {
   useMutation,
   useQueryClient
 } from '@tanstack/react-query';
+
+import socket from '../../socket';
 
 import {
   getTrips,
@@ -42,33 +43,34 @@ export default function TripDetailsPage() {
     queryFn: getTrips
   });
 
+  useEffect(() => {
+
+    if (!id) return;
+
+    socket.emit('trip:join', id);
+
+    const invalidate = () => {
+      queryClient.invalidateQueries({
+        queryKey: ['trips']
+      });
+    };
+
+    socket.on('place:created', invalidate);
+    socket.on('comment:created', invalidate);
+    socket.on('place:voted', invalidate);
+
+    return () => {
+
+      socket.emit('trip:leave', id);
+
+      socket.off('place:created', invalidate);
+      socket.off('comment:created', invalidate);
+      socket.off('place:voted', invalidate);
+    };
+
+  }, [id, queryClient]);
+
   const trip = trips.find(
-    useEffect(() => {
-
-      if (!id) return;
-
-      socket.emit('trip:join', id);
-
-      const invalidate = () => {
-        queryClient.invalidateQueries({
-          queryKey: ['trips']
-        });
-      };
-
-      socket.on('place:created', invalidate);
-      socket.on('comment:created', invalidate);
-      socket.on('place:voted', invalidate);
-
-      return () => {
-
-        socket.emit('trip:leave', id);
-
-        socket.off('place:created', invalidate);
-        socket.off('comment:created', invalidate);
-        socket.off('place:voted', invalidate);
-      };
-
-    }, [id, queryClient]);
     (item) => item.id === id
   );
 
@@ -77,6 +79,7 @@ export default function TripDetailsPage() {
       addPlace(id, data),
 
     onSuccess: () => {
+
       queryClient.invalidateQueries({
         queryKey: ['trips']
       });
@@ -93,6 +96,7 @@ export default function TripDetailsPage() {
       addComment(id, data),
 
     onSuccess: () => {
+
       queryClient.invalidateQueries({
         queryKey: ['trips']
       });
@@ -107,15 +111,15 @@ export default function TripDetailsPage() {
       value
     }) => voteForPlace(placeId, value),
 
-    const inviteMutation = useMutation({
-      mutationFn: () => createInvite(id)
-    });
-
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['trips']
       });
     }
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: () => createInvite(id)
   });
 
   if (!trip) {
@@ -135,23 +139,6 @@ export default function TripDetailsPage() {
 
           <div className="flex items-center justify-between">
 
-          <button
-            onClick={async () => {
-
-              const result =
-                await inviteMutation.mutateAsync();
-
-              await navigator.clipboard.writeText(
-                result.inviteUrl
-              );
-
-              alert('Invite link copied');
-            }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-xl"
-          >
-            Invite people
-          </button>
-
             <div>
               <h1 className="text-4xl font-bold">
                 {trip.title}
@@ -162,9 +149,22 @@ export default function TripDetailsPage() {
               </p>
             </div>
 
-            <div className="bg-black text-white px-4 py-2 rounded-xl">
-              {trip.visibility}
-            </div>
+            <button
+              onClick={async () => {
+
+                const result =
+                  await inviteMutation.mutateAsync();
+
+                await navigator.clipboard.writeText(
+                  result.inviteUrl
+                );
+
+                alert('Invite link copied');
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-xl"
+            >
+              Invite people
+            </button>
 
           </div>
 

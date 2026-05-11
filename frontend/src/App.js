@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import JoinTripPage from './features/trips/JoinTripPage';
+import React, {
+  useState,
+  useEffect
+} from 'react';
 
 import {
   BrowserRouter as Router,
@@ -30,17 +32,8 @@ import Sidebar from './components/Sidebar';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import TripsPage from './features/trips/TripsPage';
-import TripDetailsPage from './features/trips/TripDetailsPage';
 import TripWorkspacePage from './features/trips/TripWorkspacePage';
-
-<Route
-  path="/join/:token"
-  element={
-    <ProtectedRoute>
-      <JoinTripPage />
-    </ProtectedRoute>
-  }
-/>
+import JoinTripPage from './features/trips/JoinTripPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -115,12 +108,14 @@ const NotFound = () => (
       </a>
 
     </div>
+
   </div>
 );
 
 function AppContent() {
 
   const [user, setUser] = useState(() => {
+
     try {
       return JSON.parse(
         localStorage.getItem('user')
@@ -128,6 +123,7 @@ function AppContent() {
     } catch {
       return null;
     }
+
   });
 
   const location = useLocation();
@@ -135,14 +131,19 @@ function AppContent() {
   useEffect(() => {
 
     const sync = () => {
+
       try {
+
         setUser(
           JSON.parse(
             localStorage.getItem('user')
           )
         );
+
       } catch {
+
         setUser(null);
+
       }
     };
 
@@ -154,18 +155,22 @@ function AppContent() {
     sync();
 
     return () => {
+
       window.removeEventListener(
         'storage',
         sync
       );
+
     };
 
   }, [location.pathname]);
 
   const showSidebar =
     !!user &&
-    !['/login', '/register']
-      .includes(location.pathname);
+    ![
+      '/login',
+      '/register'
+    ].includes(location.pathname);
 
   return (
     <>
@@ -243,6 +248,15 @@ function AppContent() {
         />
 
         <Route
+          path="/join/:token"
+          element={
+            <ProtectedRoute>
+              <JoinTripPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/admin"
           element={
             <ProtectedRoute
@@ -259,11 +273,13 @@ function AppContent() {
         />
 
       </Routes>
+
     </>
   );
 }
 
 function App() {
+
   return (
     <QueryClientProvider client={queryClient}>
 

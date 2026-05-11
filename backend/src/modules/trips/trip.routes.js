@@ -21,12 +21,6 @@ router.get(
   tripController.getTrips
 );
 
-router.get(
-  '/:tripId',
-  requireTripMember,
-  tripController.getTripById
-);
-
 router.post(
   '/',
   tripController.createTrip
@@ -47,17 +41,6 @@ router.post(
 router.post(
   '/places/:placeId/vote',
   tripController.voteForPlace
-);
-
-router.post(
-  '/:tripId/invite',
-  requireTripMember,
-  tripController.createInvite
-);
-
-router.post(
-  '/join/:token',
-  tripController.joinTrip
 );
 
 router.post(

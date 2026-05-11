@@ -41,21 +41,6 @@ async function getTrips(req, res, next) {
   }
 }
 
-async function getTripById(req, res, next) {
-  try {
-
-    const trip =
-      await tripService.getTripById(
-        req.params.tripId
-      );
-
-    res.json(trip);
-
-  } catch (error) {
-    next(error);
-  }
-}
-
 async function addPlace(req, res, next) {
   try {
 
@@ -163,7 +148,6 @@ async function joinByInvite(
 module.exports = {
   createTrip,
   getTrips,
-  getTripById,
   addPlace,
   voteForPlace,
   addComment,
