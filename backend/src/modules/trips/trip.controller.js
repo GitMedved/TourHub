@@ -5,14 +5,9 @@ const {
   commentSchema
 } = require('./trip.validation');
 
-const tripService =
-  require('./trip.service');
-
-const inviteService =
-  require('./tripInvite.service');
+const tripService = require('./trip.service');
 
 async function createTrip(req, res, next) {
-
   try {
 
     const validatedData =
@@ -32,7 +27,6 @@ async function createTrip(req, res, next) {
 }
 
 async function getTrips(req, res, next) {
-
   try {
 
     const trips =
@@ -47,8 +41,22 @@ async function getTrips(req, res, next) {
   }
 }
 
-async function addPlace(req, res, next) {
+async function getTripById(req, res, next) {
+  try {
 
+    const trip =
+      await tripService.getTripById(
+        req.params.tripId
+      );
+
+    res.json(trip);
+
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function addPlace(req, res, next) {
   try {
 
     const validatedData =
@@ -68,7 +76,6 @@ async function addPlace(req, res, next) {
 }
 
 async function voteForPlace(req, res, next) {
-
   try {
 
     const validatedData =
@@ -89,7 +96,6 @@ async function voteForPlace(req, res, next) {
 }
 
 async function addComment(req, res, next) {
-
   try {
 
     const validatedData =
@@ -109,53 +115,11 @@ async function addComment(req, res, next) {
   }
 }
 
-async function createInvite(req, res, next) {
-
-  try {
-
-    const invite =
-      await inviteService.createInvite({
-        tripId: req.params.tripId,
-        invitedBy: req.user.id
-      });
-
-    res.status(201).json({
-      inviteLink:
-        `${process.env.CLIENT_URL || 'http://localhost:3000'}/join/${invite.token}`,
-      invite
-    });
-
-  } catch (error) {
-    next(error);
-  }
-}
-
-async function joinTrip(req, res, next) {
-
-  try {
-
-    const trip =
-      await inviteService.joinTripByInvite({
-        token: req.params.token,
-        userId: req.user.id
-      });
-
-    res.json({
-      success: true,
-      trip
-    });
-
-  } catch (error) {
-    next(error);
-  }
-}
-
 module.exports = {
   createTrip,
   getTrips,
+  getTripById,
   addPlace,
   voteForPlace,
-  addComment,
-  createInvite,
-  joinTrip
+  addComment
 };

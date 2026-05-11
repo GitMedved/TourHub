@@ -29,6 +29,8 @@ import Sidebar from './components/Sidebar';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import TripsPage from './features/trips/TripsPage';
+import TripDetailsPage from './features/trips/TripDetailsPage';
+import TripWorkspacePage from './features/trips/TripWorkspacePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -217,6 +219,15 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <TripsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/trips/:id"
+          element={
+            <ProtectedRoute>
+              <TripWorkspacePage />
             </ProtectedRoute>
           }
         />

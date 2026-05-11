@@ -21,6 +21,12 @@ router.get(
   tripController.getTrips
 );
 
+router.get(
+  '/:tripId',
+  requireTripMember,
+  tripController.getTripById
+);
+
 router.post(
   '/',
   tripController.createTrip

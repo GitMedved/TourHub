@@ -9,6 +9,7 @@ const {
 const User = require('../../models/User');
 
 async function createTrip(userId, data) {
+
   const trip = await Trip.create({
     ...data,
     ownerId: userId
@@ -20,41 +21,129 @@ async function createTrip(userId, data) {
     role: 'OWNER'
   });
 
-  return trip;
+  return getTripById(trip.id);
 }
 
-async function getUserTrips() {
+async function getUserTrips(userId) {
+
+  const memberships = await TripMember.findAll({
+    where: {
+      userId
+    }
+  });
+
+  const tripIds = memberships.map(
+    (membership) => membership.tripId
+  );
+
   return Trip.findAll({
+    where: {
+      id: tripIds
+    },
+
     include: [
       {
         model: User,
+        as: 'owner',
+        attributes: [
+          'id',
+          'name',
+          'email'
+        ]
+      },
+
+      {
+        model: User,
         as: 'members',
-        attributes: ['id', 'name', 'email'],
+
+        attributes: [
+          'id',
+          'name',
+          'email'
+        ],
+
         through: {
           attributes: ['role']
         }
       },
+
       {
         model: TripPlace,
         as: 'places'
       },
+
       {
         model: TripComment,
         as: 'comments'
       }
     ],
+
     order: [['createdAt', 'DESC']]
   });
 }
 
-async function addPlaceToTrip(tripId, data) {
-  return TripPlace.create({
-    ...data,
-    tripId
+async function getTripById(tripId) {
+
+  return Trip.findByPk(tripId, {
+
+    include: [
+      {
+        model: User,
+        as: 'owner',
+        attributes: [
+          'id',
+          'name',
+          'email'
+        ]
+      },
+
+      {
+        model: User,
+        as: 'members',
+
+        attributes: [
+          'id',
+          'name',
+          'email'
+        ],
+
+        through: {
+          attributes: ['role']
+        }
+      },
+
+      {
+        model: TripPlace,
+        as: 'places'
+      },
+
+      {
+        model: TripComment,
+        as: 'comments'
+      }
+    ]
   });
 }
 
-async function voteForPlace(placeId, userId, value) {
+async function addPlaceToTrip(
+  tripId,
+  data
+) {
+
+  const place = await TripPlace.create({
+    ...data,
+    tripId
+  });
+
+  return place;
+}
+
+async function voteForPlace(
+  placeId,
+  userId,
+  value
+) {
+
   const existingVote = await TripVote.findOne({
     where: {
       placeId,
@@ -63,21 +152,46 @@ async function voteForPlace(placeId, userId, value) {
   });
 
   if (existingVote) {
+
     existingVote.value = value;
 
     await existingVote.save();
 
-    return existingVote;
+  } else {
+
+    await TripVote.create({
+      placeId,
+      userId,
+      value
+    });
   }
 
-  return TripVote.create({
-    placeId,
-    userId,
-    value
+  const votes = await TripVote.findAll({
+    where: {
+      placeId
+    }
   });
+
+  const score = votes.reduce(
+    (sum, vote) => sum + vote.value,
+    0
+  );
+
+  const place = await TripPlace.findByPk(placeId);
+
+  place.voteScore = score;
+
+  await place.save();
+
+  return place;
 }
 
-async function addComment(tripId, userId, content) {
+async function addComment(
+  tripId,
+  userId,
+  content
+) {
+
   return TripComment.create({
     tripId,
     userId,
@@ -85,10 +199,36 @@ async function addComment(tripId, userId, content) {
   });
 }
 
+async function addMember(
+  tripId,
+  userId
+) {
+
+  const existingMember =
+    await TripMember.findOne({
+      where: {
+        tripId,
+        userId
+      }
+    });
+
+  if (existingMember) {
+    return existingMember;
+  }
+
+  return TripMember.create({
+    tripId,
+    userId,
+    role: 'EDITOR'
+  });
+}
+
 module.exports = {
   createTrip,
   getUserTrips,
+  getTripById,
   addPlaceToTrip,
   voteForPlace,
-  addComment
+  addComment,
+  addMember
 };

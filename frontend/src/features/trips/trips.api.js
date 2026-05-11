@@ -5,12 +5,28 @@ export const getTrips = async () => {
   return response.data;
 };
 
-export const createTrip = async (data) => {
-  const response = await api.post('/trips', data);
+export const getTripById = async (tripId) => {
+  const response = await api.get(
+    `/trips/${tripId}`
+  );
+
   return response.data;
 };
 
-export const addPlace = async (tripId, data) => {
+export const createTrip = async (data) => {
+  const response = await api.post(
+    '/trips',
+    data
+  );
+
+  return response.data;
+};
+
+export const addPlace = async (
+  tripId,
+  data
+) => {
+
   const response = await api.post(
     `/trips/${tripId}/places`,
     data
@@ -19,7 +35,11 @@ export const addPlace = async (tripId, data) => {
   return response.data;
 };
 
-export const addComment = async (tripId, data) => {
+export const addComment = async (
+  tripId,
+  data
+) => {
+
   const response = await api.post(
     `/trips/${tripId}/comments`,
     data
@@ -28,7 +48,11 @@ export const addComment = async (tripId, data) => {
   return response.data;
 };
 
-export const voteForPlace = async (placeId, value) => {
+export const voteForPlace = async (
+  placeId,
+  value
+) => {
+
   const response = await api.post(
     `/trips/places/${placeId}/vote`,
     { value }
