@@ -7,13 +7,9 @@ const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
-const messageRoutes = require('./routes/messageRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
-const reviewRoutes = require('./routes/reviewRoutes');
-const sellerRoutes = require('./routes/sellerRoutes');
+
 const tripRoutes = require('./modules/trips/trip.routes');
-const wishlistRoutes = require('./routes/wishlistRoutes');
 
 const app = express();
 
@@ -36,26 +32,35 @@ const allowedOrigins = (
 
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+
+    if (
+      !origin ||
+      allowedOrigins.includes(origin)
+    ) {
       return callback(null, true);
     }
 
-    return callback(new Error('Not allowed by CORS'));
+    return callback(
+      new Error('Not allowed by CORS')
+    );
   },
+
   credentials: true
 }));
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
+
   message: {
-    error: 'Too many attempts, try again later'
+    error: 'Too many attempts'
   }
 });
 
 const generalLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 200,
+
   message: {
     error: 'Too many requests'
   }
@@ -63,7 +68,10 @@ const generalLimiter = rateLimit({
 
 app.use(generalLimiter);
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({
+  limit: '10mb'
+}));
+
 app.use(express.urlencoded({
   extended: true,
   limit: '10mb'
@@ -71,40 +79,67 @@ app.use(express.urlencoded({
 
 app.use(
   '/uploads',
-  express.static(path.join(__dirname, '../uploads'))
+  express.static(
+    path.join(__dirname, '../uploads')
+  )
 );
 
-app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/sellers', sellerRoutes);
-app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/trips', tripRoutes);
+app.use(
+  '/api/auth',
+  authLimiter,
+  authRoutes
+);
 
-app.get('/api/health', async (req, res) => {
+app.use(
+  '/api/events',
+  eventRoutes
+);
+
+app.use(
+  '/api/trips',
+  tripRoutes
+);
+
+app.use(
+  '/api/upload',
+  uploadRoutes
+);
+
+app.use(
+  '/api/admin',
+  adminRoutes
+);
+
+app.get('/api/health', (req, res) => {
+
   res.json({
     status: 'ok',
     uptime: process.uptime(),
     timestamp: new Date()
   });
+
 });
 
 app.use((req, res) => {
+
   res.status(404).json({
     error: 'Route not found'
   });
+
 });
 
 app.use((err, req, res, next) => {
+
   console.error(err);
 
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error'
+  res.status(
+    err.status || 500
+  ).json({
+    error:
+      err.message ||
+      'Internal server error'
   });
+
 });
 
 module.exports = app;
