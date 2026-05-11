@@ -5,16 +5,24 @@ const {
   commentSchema
 } = require('./trip.validation');
 
-const tripService = require('./trip.service');
+const tripService =
+  require('./trip.service');
+
+const inviteService =
+  require('./tripInvite.service');
 
 async function createTrip(req, res, next) {
-  try {
-    const validatedData = createTripSchema.parse(req.body);
 
-    const trip = await tripService.createTrip(
-      req.user.id,
-      validatedData
-    );
+  try {
+
+    const validatedData =
+      createTripSchema.parse(req.body);
+
+    const trip =
+      await tripService.createTrip(
+        req.user.id,
+        validatedData
+      );
 
     res.status(201).json(trip);
 
@@ -24,10 +32,13 @@ async function createTrip(req, res, next) {
 }
 
 async function getTrips(req, res, next) {
+
   try {
-    const trips = await tripService.getUserTrips(
-      req.user.id
-    );
+
+    const trips =
+      await tripService.getUserTrips(
+        req.user.id
+      );
 
     res.json(trips);
 
@@ -37,13 +48,17 @@ async function getTrips(req, res, next) {
 }
 
 async function addPlace(req, res, next) {
-  try {
-    const validatedData = addPlaceSchema.parse(req.body);
 
-    const place = await tripService.addPlaceToTrip(
-      req.params.tripId,
-      validatedData
-    );
+  try {
+
+    const validatedData =
+      addPlaceSchema.parse(req.body);
+
+    const place =
+      await tripService.addPlaceToTrip(
+        req.params.tripId,
+        validatedData
+      );
 
     res.status(201).json(place);
 
@@ -53,14 +68,18 @@ async function addPlace(req, res, next) {
 }
 
 async function voteForPlace(req, res, next) {
-  try {
-    const validatedData = voteSchema.parse(req.body);
 
-    const vote = await tripService.voteForPlace(
-      req.params.placeId,
-      req.user.id,
-      validatedData.value
-    );
+  try {
+
+    const validatedData =
+      voteSchema.parse(req.body);
+
+    const vote =
+      await tripService.voteForPlace(
+        req.params.placeId,
+        req.user.id,
+        validatedData.value
+      );
 
     res.json(vote);
 
@@ -70,16 +89,61 @@ async function voteForPlace(req, res, next) {
 }
 
 async function addComment(req, res, next) {
-  try {
-    const validatedData = commentSchema.parse(req.body);
 
-    const comment = await tripService.addComment(
-      req.params.tripId,
-      req.user.id,
-      validatedData.content
-    );
+  try {
+
+    const validatedData =
+      commentSchema.parse(req.body);
+
+    const comment =
+      await tripService.addComment(
+        req.params.tripId,
+        req.user.id,
+        validatedData.content
+      );
 
     res.status(201).json(comment);
+
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function createInvite(req, res, next) {
+
+  try {
+
+    const invite =
+      await inviteService.createInvite({
+        tripId: req.params.tripId,
+        invitedBy: req.user.id
+      });
+
+    res.status(201).json({
+      inviteLink:
+        `${process.env.CLIENT_URL || 'http://localhost:3000'}/join/${invite.token}`,
+      invite
+    });
+
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function joinTrip(req, res, next) {
+
+  try {
+
+    const trip =
+      await inviteService.joinTripByInvite({
+        token: req.params.token,
+        userId: req.user.id
+      });
+
+    res.json({
+      success: true,
+      trip
+    });
 
   } catch (error) {
     next(error);
@@ -91,5 +155,7 @@ module.exports = {
   getTrips,
   addPlace,
   voteForPlace,
-  addComment
+  addComment,
+  createInvite,
+  joinTrip
 };

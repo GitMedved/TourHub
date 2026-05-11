@@ -6,7 +6,8 @@ const {
   authMiddleware
 } = require('../../middleware/auth');
 
-const tripController = require('./trip.controller');
+const tripController =
+  require('./trip.controller');
 
 const {
   requireTripMember,
@@ -40,6 +41,17 @@ router.post(
 router.post(
   '/places/:placeId/vote',
   tripController.voteForPlace
+);
+
+router.post(
+  '/:tripId/invite',
+  requireTripMember,
+  tripController.createInvite
+);
+
+router.post(
+  '/join/:token',
+  tripController.joinTrip
 );
 
 module.exports = router;

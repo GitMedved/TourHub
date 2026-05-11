@@ -1,10 +1,22 @@
 const Trip = require('./trip.model');
-const TripMember = require('./tripMember.model');
-const TripPlace = require('./tripPlace.model');
-const TripVote = require('./tripVote.model');
-const TripComment = require('./tripComment.model');
 
-const User = require('../../models/User');
+const TripMember =
+  require('./tripMember.model');
+
+const TripPlace =
+  require('./tripPlace.model');
+
+const TripVote =
+  require('./tripVote.model');
+
+const TripComment =
+  require('./tripComment.model');
+
+const TripInvite =
+  require('./tripInvite.model');
+
+const User =
+  require('../../models/User');
 
 Trip.belongsTo(User, {
   foreignKey: 'ownerId',
@@ -28,10 +40,26 @@ Trip.hasMany(TripComment, {
   as: 'comments'
 });
 
+Trip.hasMany(TripInvite, {
+  foreignKey: 'tripId',
+  as: 'invites'
+});
+
+TripInvite.belongsTo(Trip, {
+  foreignKey: 'tripId',
+  as: 'trip'
+});
+
+TripInvite.belongsTo(User, {
+  foreignKey: 'invitedBy',
+  as: 'creator'
+});
+
 module.exports = {
   Trip,
   TripMember,
   TripPlace,
   TripVote,
-  TripComment
+  TripComment,
+  TripInvite
 };
