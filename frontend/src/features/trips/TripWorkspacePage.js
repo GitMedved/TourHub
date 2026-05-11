@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, {
+  useEffect,
+  useState
+} from 'react';
 
 import {
   useParams
@@ -10,25 +13,51 @@ import {
   useQueryClient
 } from '@tanstack/react-query';
 
+import socket from '../../socket';
+
 import {
   getTrips,
   addPlace,
   addComment,
-  voteForPlace
+  voteForPlace,
+  createInvite
 } from './trips.api';
 
 export default function TripWorkspacePage() {
 
   const { id } = useParams();
 
-  const queryClient = useQueryClient();
+  const queryClient =
+    useQueryClient();
 
-  const [placeForm, setPlaceForm] = useState({
-    title: '',
-    description: ''
+  const [onlineUsers, setOnlineUsers] =
+    useState([]);
+
+  const [typingUser, setTypingUser] =
+    useState(null);
+
+  const [placeForm, setPlaceForm] =
+    useState({
+      title: '',
+      description: ''
+    });
+
+  const [comment, setComment] =
+    useState('');
+
+  const [currentUser] = useState(() => {
+
+    try {
+
+      return JSON.parse(
+        localStorage.getItem('user')
+      );
+
+    } catch {
+
+      return null;
+    }
   });
-
-  const [comment, setComment] = useState('');
 
   const {
     data: trips = [],
@@ -39,58 +68,161 @@ export default function TripWorkspacePage() {
   });
 
   const trip = trips.find(
-    (item) => String(item.id) === String(id)
+    (item) =>
+      String(item.id) === String(id)
   );
 
-  const addPlaceMutation = useMutation({
-    mutationFn: (data) => addPlace(id, data),
+  useEffect(() => {
 
-    onSuccess: () => {
+    if (!id || !currentUser) {
+      return;
+    }
+
+    socket.emit('trip:join', {
+      tripId: id,
+      user: currentUser
+    });
+
+    const handlePresence = (
+      users
+    ) => {
+
+      setOnlineUsers(users);
+    };
+
+    const handleTyping = (
+      user
+    ) => {
+
+      setTypingUser(user);
+
+      setTimeout(() => {
+
+        setTypingUser(null);
+
+      }, 2000);
+    };
+
+    const refreshTrips = () => {
+
       queryClient.invalidateQueries({
         queryKey: ['trips']
       });
+    };
 
-      setPlaceForm({
-        title: '',
-        description: ''
-      });
-    }
-  });
+    socket.on(
+      'trip:presence',
+      handlePresence
+    );
 
-  const addCommentMutation = useMutation({
-    mutationFn: (data) => addComment(id, data),
+    socket.on(
+      'trip:userTyping',
+      handleTyping
+    );
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['trips']
-      });
+    socket.on(
+      'place:added',
+      refreshTrips
+    );
 
-      setComment('');
-    }
-  });
+    socket.on(
+      'comment:added',
+      refreshTrips
+    );
 
-  const voteMutation = useMutation({
-    mutationFn: ({
-      placeId,
-      value
-    }) => voteForPlace(placeId, value),
+    socket.on(
+      'place:voted',
+      refreshTrips
+    );
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['trips']
-      });
-    }
-  });
+    return () => {
+
+      socket.off(
+        'trip:presence',
+        handlePresence
+      );
+
+      socket.off(
+        'trip:userTyping',
+        handleTyping
+      );
+
+      socket.off(
+        'place:added',
+        refreshTrips
+      );
+
+      socket.off(
+        'comment:added',
+        refreshTrips
+      );
+
+      socket.off(
+        'place:voted',
+        refreshTrips
+      );
+    };
+
+  }, [id, currentUser, queryClient]);
+
+  const addPlaceMutation =
+    useMutation({
+
+      mutationFn: (data) =>
+        addPlace(id, data),
+
+      onSuccess: () => {
+
+        setPlaceForm({
+          title: '',
+          description: ''
+        });
+      }
+    });
+
+  const addCommentMutation =
+    useMutation({
+
+      mutationFn: (data) =>
+        addComment(id, data),
+
+      onSuccess: () => {
+
+        setComment('');
+      }
+    });
+
+  const voteMutation =
+    useMutation({
+
+      mutationFn: ({
+        placeId,
+        value
+      }) =>
+        voteForPlace(
+          placeId,
+          value
+        )
+    });
+
+  const inviteMutation =
+    useMutation({
+
+      mutationFn: () =>
+        createInvite(id)
+    });
 
   if (isLoading) {
+
     return (
       <div className="p-8">
-        Loading workspace...
+        Loading...
       </div>
     );
   }
 
   if (!trip) {
+
     return (
       <div className="p-8">
         Trip not found
@@ -99,6 +231,7 @@ export default function TripWorkspacePage() {
   }
 
   return (
+
     <div className="min-h-screen bg-gray-100">
 
       <div className="max-w-7xl mx-auto p-6">
@@ -109,27 +242,68 @@ export default function TripWorkspacePage() {
 
             <div>
 
-              <div className="flex items-center gap-3 mb-3">
-
-                <span className="px-4 py-1 rounded-full bg-black text-white text-sm">
-                  collaborative workspace
-                </span>
-
-                <span className="px-4 py-1 rounded-full bg-gray-100 text-sm">
-                  {trip.visibility}
-                </span>
-
-              </div>
-
               <h1 className="text-5xl font-bold">
                 {trip.title}
               </h1>
 
-              <p className="text-gray-500 mt-3 text-lg">
+              <p className="text-gray-500 mt-3">
                 {trip.destination}
               </p>
 
             </div>
+
+            <button
+              onClick={async () => {
+
+                const result =
+                  await inviteMutation.mutateAsync();
+
+                await navigator.clipboard.writeText(
+                  result.inviteUrl
+                );
+
+                alert('Invite copied');
+              }}
+              className="bg-black text-white px-5 py-3 rounded-2xl"
+            >
+              Invite
+            </button>
+
+          </div>
+
+          <div className="mt-6">
+
+            <div className="text-sm text-gray-400 mb-2">
+              Online users
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+
+              {onlineUsers.map(
+                (user) => (
+
+                  <div
+                    key={user.id}
+                    className="
+                      px-3
+                      py-2
+                      bg-green-100
+                      rounded-xl
+                    "
+                  >
+                    {user.firstName}
+                  </div>
+                )
+              )}
+
+            </div>
+
+            {typingUser && (
+
+              <div className="mt-3 text-sm text-gray-500">
+                {typingUser.firstName} is typing...
+              </div>
+            )}
 
           </div>
 
@@ -137,31 +311,22 @@ export default function TripWorkspacePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2">
 
             <div className="bg-white rounded-3xl shadow-sm p-6">
 
-              <div className="flex items-center justify-between mb-6">
-
-                <div>
-
-                  <h2 className="text-3xl font-bold">
-                    Places
-                  </h2>
-
-                  <p className="text-gray-500 mt-1">
-                    Vote together on trip ideas
-                  </p>
-
-                </div>
-
-              </div>
+              <h2 className="text-3xl font-bold mb-6">
+                Places
+              </h2>
 
               <form
                 onSubmit={(e) => {
+
                   e.preventDefault();
 
-                  addPlaceMutation.mutate(placeForm);
+                  addPlaceMutation.mutate(
+                    placeForm
+                  );
                 }}
                 className="space-y-4 mb-8"
               >
@@ -170,27 +335,33 @@ export default function TripWorkspacePage() {
                   type="text"
                   placeholder="Place title"
                   value={placeForm.title}
-                  onChange={(e) => setPlaceForm({
-                    ...placeForm,
-                    title: e.target.value
-                  })}
-                  className="w-full border rounded-2xl p-4"
+                  onChange={(e) =>
+                    setPlaceForm({
+                      ...placeForm,
+                      title:
+                        e.target.value
+                    })
+                  }
+                  className="w-full border p-4 rounded-2xl"
                   required
                 />
 
                 <textarea
-                  placeholder="Why should we visit this place?"
+                  placeholder="Description"
                   value={placeForm.description}
-                  onChange={(e) => setPlaceForm({
-                    ...placeForm,
-                    description: e.target.value
-                  })}
-                  className="w-full border rounded-2xl p-4 min-h-[120px]"
+                  onChange={(e) =>
+                    setPlaceForm({
+                      ...placeForm,
+                      description:
+                        e.target.value
+                    })
+                  }
+                  className="w-full border p-4 rounded-2xl"
                 />
 
                 <button
                   type="submit"
-                  className="bg-black text-white px-6 py-3 rounded-2xl"
+                  className="bg-black text-white px-5 py-3 rounded-2xl"
                 >
                   Add place
                 </button>
@@ -199,58 +370,61 @@ export default function TripWorkspacePage() {
 
               <div className="space-y-4">
 
-                {trip.places?.map((place) => (
-                  <div
-                    key={place.id}
-                    className="border rounded-3xl p-5"
-                  >
+                {trip.places?.map(
+                  (place) => (
 
-                    <div className="flex items-start justify-between gap-6">
+                    <div
+                      key={place.id}
+                      className="border rounded-2xl p-5"
+                    >
 
-                      <div className="flex-1">
+                      <div className="flex justify-between">
 
-                        <h3 className="text-2xl font-semibold">
-                          {place.title}
-                        </h3>
+                        <div>
 
-                        <p className="text-gray-500 mt-2">
-                          {place.description}
-                        </p>
+                          <h3 className="text-2xl font-semibold">
+                            {place.title}
+                          </h3>
 
-                      </div>
+                          <p className="text-gray-500 mt-2">
+                            {place.description}
+                          </p>
 
-                      <div className="flex flex-col items-center gap-2">
-
-                        <button
-                          onClick={() => voteMutation.mutate({
-                            placeId: place.id,
-                            value: 1
-                          })}
-                          className="w-12 h-12 rounded-2xl bg-green-100 text-2xl"
-                        >
-                          👍
-                        </button>
-
-                        <div className="font-bold text-xl">
-                          {place.voteScore || 0}
                         </div>
 
-                        <button
-                          onClick={() => voteMutation.mutate({
-                            placeId: place.id,
-                            value: -1
-                          })}
-                          className="w-12 h-12 rounded-2xl bg-red-100 text-2xl"
-                        >
-                          👎
-                        </button>
+                        <div className="flex flex-col gap-2">
+
+                          <button
+                            onClick={() =>
+                              voteMutation.mutate({
+                                placeId:
+                                  place.id,
+                                value: 1
+                              })
+                            }
+                          >
+                            👍
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              voteMutation.mutate({
+                                placeId:
+                                  place.id,
+                                value: -1
+                              })
+                            }
+                          >
+                            👎
+                          </button>
+
+                        </div>
 
                       </div>
 
                     </div>
-
-                  </div>
-                ))}
+                  )
+                )}
 
               </div>
 
@@ -258,31 +432,43 @@ export default function TripWorkspacePage() {
 
           </div>
 
-          <div className="space-y-6">
+          <div>
 
             <div className="bg-white rounded-3xl shadow-sm p-6">
 
               <h2 className="text-3xl font-bold mb-6">
-                Discussion
+                Comments
               </h2>
 
               <form
                 onSubmit={(e) => {
+
                   e.preventDefault();
 
                   addCommentMutation.mutate({
                     content: comment
                   });
                 }}
-                className="mb-6"
               >
 
                 <textarea
-                  placeholder="Write a message..."
                   value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  className="w-full border rounded-2xl p-4 min-h-[120px]"
-                  required
+                  onChange={(e) => {
+
+                    setComment(
+                      e.target.value
+                    );
+
+                    socket.emit(
+                      'trip:typing',
+                      {
+                        tripId: id,
+                        user: currentUser
+                      }
+                    );
+                  }}
+                  placeholder="Write comment..."
+                  className="w-full border p-4 rounded-2xl"
                 />
 
                 <button
@@ -294,24 +480,30 @@ export default function TripWorkspacePage() {
 
               </form>
 
-              <div className="space-y-4">
+              <div className="space-y-4 mt-6">
 
-                {trip.comments?.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-gray-50 rounded-2xl p-4"
-                  >
+                {trip.comments?.map(
+                  (item) => (
 
-                    <div className="text-sm text-gray-400 mb-2">
-                      participant
+                    <div
+                      key={item.id}
+                      className="bg-gray-50 p-4 rounded-2xl"
+                    >
+
+                      <div className="text-sm text-gray-400 mb-2">
+
+                        {item.author?.firstName ||
+                          'User'}
+
+                      </div>
+
+                      <div>
+                        {item.content}
+                      </div>
+
                     </div>
-
-                    <div>
-                      {item.content}
-                    </div>
-
-                  </div>
-                ))}
+                  )
+                )}
 
               </div>
 

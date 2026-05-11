@@ -2,7 +2,7 @@ const { Server } = require('socket.io');
 
 let io;
 
-function initSocket(server) {
+const initSocket = (server) => {
 
   io = new Server(server, {
     cors: {
@@ -13,39 +13,42 @@ function initSocket(server) {
 
   io.on('connection', (socket) => {
 
-    console.log('Socket connected:', socket.id);
+    console.log(
+      `Socket connected: ${socket.id}`
+    );
 
-    socket.on('trip:join', (tripId) => {
+    socket.on('joinTrip', (tripId) => {
 
-      socket.join(`trip:${tripId}`);
+      const room = `trip:${tripId}`;
+
+      socket.join(room);
 
       console.log(
-        `Socket ${socket.id} joined trip:${tripId}`
+        `Socket ${socket.id} joined ${room}`
       );
     });
 
-    socket.on('trip:leave', (tripId) => {
-
-      socket.leave(`trip:${tripId}`);
-    });
-
     socket.on('disconnect', () => {
-      console.log('Socket disconnected:', socket.id);
-    });
 
+      console.log(
+        `Socket disconnected: ${socket.id}`
+      );
+    });
   });
 
   return io;
-}
+};
 
-function getIO() {
+const getIO = () => {
 
   if (!io) {
-    throw new Error('Socket.io not initialized');
+    throw new Error(
+      'Socket.io not initialized'
+    );
   }
 
   return io;
-}
+};
 
 module.exports = {
   initSocket,

@@ -55,6 +55,48 @@ TripInvite.belongsTo(User, {
   as: 'creator'
 });
 
+/* =========================
+   TRIP PLACE RELATIONS
+========================= */
+
+TripPlace.belongsTo(Trip, {
+  foreignKey: 'tripId',
+  as: 'trip'
+});
+
+TripPlace.hasMany(TripVote, {
+  foreignKey: 'placeId',
+  as: 'votes'
+});
+
+/* =========================
+   VOTES
+========================= */
+
+TripVote.belongsTo(TripPlace, {
+  foreignKey: 'placeId',
+  as: 'place'
+});
+
+TripVote.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
+});
+
+/* =========================
+   COMMENTS
+========================= */
+
+TripComment.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'author'
+});
+
+TripComment.belongsTo(Trip, {
+  foreignKey: 'tripId',
+  as: 'trip'
+});
+
 module.exports = {
   Trip,
   TripMember,

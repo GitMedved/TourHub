@@ -1,156 +1,104 @@
-const {
-  createTripSchema,
-  addPlaceSchema,
-  voteSchema,
-  commentSchema
-} = require('./trip.validation');
-
 const tripService = require('./trip.service');
 
-async function createTrip(req, res, next) {
-  try {
+const createTrip = async (req, res) => {
 
-    const validatedData =
-      createTripSchema.parse(req.body);
+  const trip =
+    await tripService.createTrip(
+      req.body,
+      req.user.id
+    );
 
-    const trip =
-      await tripService.createTrip(
-        req.user.id,
-        validatedData
-      );
+  res.status(201).json(trip);
+};
 
-    res.status(201).json(trip);
+const getTrips = async (req, res) => {
 
-  } catch (error) {
-    next(error);
-  }
-}
+  const trips =
+    await tripService.getUserTrips(
+      req.user.id
+    );
 
-async function getTrips(req, res, next) {
-  try {
+  res.json(trips);
+};
 
-    const trips =
-      await tripService.getUserTrips(
-        req.user.id
-      );
+const getTripById = async (req, res) => {
 
-    res.json(trips);
+  const trip =
+    await tripService.getTripById(
+      req.params.tripId
+    );
 
-  } catch (error) {
-    next(error);
-  }
-}
+  res.json(trip);
+};
 
-async function addPlace(req, res, next) {
-  try {
+const addPlace = async (req, res) => {
 
-    const validatedData =
-      addPlaceSchema.parse(req.body);
+  const place =
+    await tripService.addPlace(
+      req.params.tripId,
+      req.body,
+      req.user.id
+    );
 
-    const place =
-      await tripService.addPlaceToTrip(
-        req.params.tripId,
-        validatedData
-      );
+  res.status(201).json(place);
+};
 
-    res.status(201).json(place);
+const voteForPlace = async (req, res) => {
 
-  } catch (error) {
-    next(error);
-  }
-}
+  const result =
+    await tripService.voteForPlace(
+      req.params.placeId,
+      req.body.value,
+      req.user.id
+    );
 
-async function voteForPlace(req, res, next) {
-  try {
+  res.json(result);
+};
 
-    const validatedData =
-      voteSchema.parse(req.body);
+const addComment = async (req, res) => {
 
-    const vote =
-      await tripService.voteForPlace(
-        req.params.placeId,
-        req.user.id,
-        validatedData.value
-      );
+  const comment =
+    await tripService.addComment(
+      req.params.tripId,
+      req.body,
+      req.user.id
+    );
 
-    res.json(vote);
+  res.status(201).json(comment);
+};
 
-  } catch (error) {
-    next(error);
-  }
-}
-
-async function addComment(req, res, next) {
-  try {
-
-    const validatedData =
-      commentSchema.parse(req.body);
-
-    const comment =
-      await tripService.addComment(
-        req.params.tripId,
-        req.user.id,
-        validatedData.content
-      );
-
-    res.status(201).json(comment);
-
-  } catch (error) {
-    next(error);
-  }
-}
-
-async function createInvite(
+const createInvite = async (
   req,
-  res,
-  next
-) {
+  res
+) => {
 
-  try {
+  const invite =
+    await tripService.createInvite(
+      req.params.tripId,
+      req.user.id
+    );
 
-    const invite =
-      await tripService.createInviteLink(
-        req.params.tripId,
-        req.user.id
-      );
+  res.status(201).json(invite);
+};
 
-    res.json({
-      inviteUrl:
-        `${process.env.CLIENT_URL}/join/${invite.token}`
-    });
+const joinTrip = async (req, res) => {
 
-  } catch (error) {
-    next(error);
-  }
-}
+  const result =
+    await tripService.joinTripByInvite(
+      req.params.token,
+      req.user.id
+    );
 
-async function joinByInvite(
-  req,
-  res,
-  next
-) {
-
-  try {
-
-    const trip =
-      await tripService.joinTripByInvite(
-        req.params.token,
-        req.user.id
-      );
-
-    res.json(trip);
-
-  } catch (error) {
-    next(error);
-  }
-}
+  res.json(result);
+};
 
 module.exports = {
   createTrip,
   getTrips,
+  getTripById,
   addPlace,
   voteForPlace,
   addComment,
   createInvite,
-  joinByInvite
+  joinTrip
 };

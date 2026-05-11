@@ -51,7 +51,7 @@ router.post(
 
 router.post(
   '/join/:token',
-  tripController.joinByInvite
+  tripController.joinTrip
 );
 
 module.exports = router;

@@ -8,6 +8,28 @@ const {
   initSocket
 } = require('./socket');
 
+/*
+|--------------------------------------------------------------------------
+| IMPORT ALL MODELS
+|--------------------------------------------------------------------------
+*/
+
+require('./models/User');
+require('./models/Event');
+require('./models/Booking');
+require('./models/Review');
+require('./models/Message');
+require('./models/Seller');
+require('./models/Wishlist');
+
+/*
+|--------------------------------------------------------------------------
+| IMPORT TRIPS MODULE
+|--------------------------------------------------------------------------
+*/
+
+require('./modules/trips/trip.associations');
+
 const PORT = process.env.PORT || 5001;
 
 async function start() {
@@ -27,9 +49,11 @@ async function start() {
     initSocket(server);
 
     server.listen(PORT, () => {
+
       console.log(
         `Server running on port ${PORT}`
       );
+
     });
 
   } catch (error) {
