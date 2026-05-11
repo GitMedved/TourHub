@@ -106,8 +106,8 @@ const HomePage = () => {
     staleTime: 1000 * 60 * 5
   });
 
-  const events = data || [];
-
+  const events = Array.isArray(data) ? data : (data?.content || []);
+  const events = Array.isArray(data) ? data : [];
   const filtered = events.filter(e => {
     if (search && !e.title?.toLowerCase().includes(search.toLowerCase())) return false;
     if (category !== 'all' && e.category !== category) return false;
