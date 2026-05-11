@@ -1,35 +1,44 @@
+const http = require('http');
+
 const app = require('./app');
+
 const sequelize = require('./config/database');
-require('./modules/trips/trip.associations');
+
+const {
+  initSocket
+} = require('./socket');
 
 const PORT = process.env.PORT || 5001;
 
 async function start() {
+
   try {
+
     await sequelize.authenticate();
-    await sequelize.sync();
 
     console.log('Database connected');
 
-    const server = app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    await sequelize.sync({
+      alter: true
     });
 
-    const gracefulShutdown = async () => {
-      console.log('Shutting down gracefully...');
+    const server = http.createServer(app);
 
-      server.close(async () => {
-        await sequelize.close();
-        console.log('Shutdown complete');
-        process.exit(0);
-      });
-    };
+    initSocket(server);
 
-    process.on('SIGINT', gracefulShutdown);
-    process.on('SIGTERM', gracefulShutdown);
+    server.listen(PORT, () => {
+      console.log(
+        `Server running on port ${PORT}`
+      );
+    });
 
   } catch (error) {
-    console.error('Startup error:', error);
+
+    console.error(
+      'Startup error:',
+      error
+    );
+
     process.exit(1);
   }
 }

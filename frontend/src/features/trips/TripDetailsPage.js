@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+import React, {
+  useState,
+  useEffect
+} from 'react';
+import socket from '../../socket';
 
 import {
   useParams
@@ -38,6 +42,32 @@ export default function TripDetailsPage() {
   });
 
   const trip = trips.find(
+    useEffect(() => {
+
+      if (!id) return;
+
+      socket.emit('trip:join', id);
+
+      const invalidate = () => {
+        queryClient.invalidateQueries({
+          queryKey: ['trips']
+        });
+      };
+
+      socket.on('place:created', invalidate);
+      socket.on('comment:created', invalidate);
+      socket.on('place:voted', invalidate);
+
+      return () => {
+
+        socket.emit('trip:leave', id);
+
+        socket.off('place:created', invalidate);
+        socket.off('comment:created', invalidate);
+        socket.off('place:voted', invalidate);
+      };
+
+    }, [id, queryClient]);
     (item) => item.id === id
   );
 
