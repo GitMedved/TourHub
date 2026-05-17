@@ -75,9 +75,13 @@ export const voteForPlace = async (
   value
 ) => {
 
+  const voteType = value === -1
+    ? 'downvote'
+    : 'upvote';
+
   const response = await api.post(
     `/trips/places/${placeId}/vote`,
-    { value }
+    { voteType }
   );
 
   return response.data;

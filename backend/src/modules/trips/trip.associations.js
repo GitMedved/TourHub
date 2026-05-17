@@ -1,101 +1,52 @@
 const Trip = require('./trip.model');
+const TripMember = require('./tripMember.model');
+const TripPlace = require('./tripPlace.model');
+const TripVote = require('./tripVote.model');
+const TripComment = require('./tripComment.model');
+const TripInvite = require('./tripInvite.model');
+const User = require('../../models/User');
 
-const TripMember =
-  require('./tripMember.model');
+/*
+ * Keep this file as the single source of truth for Sequelize aliases used by
+ * the trips module. Every include in controllers/services must use these exact
+ * `as` values to avoid SequelizeEagerLoadingError at runtime.
+ */
 
-const TripPlace =
-  require('./tripPlace.model');
+// ========== User ==========
+User.hasMany(Trip, { foreignKey: 'ownerId', as: 'ownedTrips' });
+User.hasMany(TripMember, { foreignKey: 'userId', as: 'memberships' });
+User.hasMany(TripPlace, { foreignKey: 'addedById', as: 'addedPlaces' });
+User.hasMany(TripVote, { foreignKey: 'userId', as: 'votes' });
+User.hasMany(TripComment, { foreignKey: 'authorId', as: 'authoredComments' });
+User.hasMany(TripInvite, { foreignKey: 'createdById', as: 'createdInvites' });
 
-const TripVote =
-  require('./tripVote.model');
+// ========== Trip ==========
+Trip.belongsTo(User, { foreignKey: 'ownerId', as: 'owner' });
+Trip.hasMany(TripMember, { foreignKey: 'tripId', as: 'members' });
+Trip.hasMany(TripPlace, { foreignKey: 'tripId', as: 'places' });
+Trip.hasMany(TripComment, { foreignKey: 'tripId', as: 'comments' });
+Trip.hasMany(TripInvite, { foreignKey: 'tripId', as: 'invites' });
 
-const TripComment =
-  require('./tripComment.model');
+// ========== TripMember ==========
+TripMember.belongsTo(Trip, { foreignKey: 'tripId', as: 'trip' });
+TripMember.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-const TripInvite =
-  require('./tripInvite.model');
+// ========== TripPlace ==========
+TripPlace.belongsTo(Trip, { foreignKey: 'tripId', as: 'trip' });
+TripPlace.belongsTo(User, { foreignKey: 'addedById', as: 'addedBy' });
+TripPlace.hasMany(TripVote, { foreignKey: 'tripPlaceId', as: 'votes' });
 
-const User =
-  require('../../models/User');
+// ========== TripVote ==========
+TripVote.belongsTo(TripPlace, { foreignKey: 'tripPlaceId', as: 'place' });
+TripVote.belongsTo(User, { foreignKey: 'userId', as: 'voter' });
 
-Trip.belongsTo(User, {
-  foreignKey: 'ownerId',
-  as: 'owner'
-});
+// ========== TripComment ==========
+TripComment.belongsTo(Trip, { foreignKey: 'tripId', as: 'trip' });
+TripComment.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
 
-Trip.belongsToMany(User, {
-  through: TripMember,
-  foreignKey: 'tripId',
-  otherKey: 'userId',
-  as: 'members'
-});
-
-Trip.hasMany(TripPlace, {
-  foreignKey: 'tripId',
-  as: 'places'
-});
-
-Trip.hasMany(TripComment, {
-  foreignKey: 'tripId',
-  as: 'comments'
-});
-
-Trip.hasMany(TripInvite, {
-  foreignKey: 'tripId',
-  as: 'invites'
-});
-
-TripInvite.belongsTo(Trip, {
-  foreignKey: 'tripId',
-  as: 'trip'
-});
-
-TripInvite.belongsTo(User, {
-  foreignKey: 'invitedBy',
-  as: 'creator'
-});
-
-/* =========================
-   TRIP PLACE RELATIONS
-========================= */
-
-TripPlace.belongsTo(Trip, {
-  foreignKey: 'tripId',
-  as: 'trip'
-});
-
-TripPlace.hasMany(TripVote, {
-  foreignKey: 'placeId',
-  as: 'votes'
-});
-
-/* =========================
-   VOTES
-========================= */
-
-TripVote.belongsTo(TripPlace, {
-  foreignKey: 'placeId',
-  as: 'place'
-});
-
-TripVote.belongsTo(User, {
-  foreignKey: 'userId',
-  as: 'user'
-});
-
-/* =========================
-   COMMENTS
-========================= */
-
-TripComment.belongsTo(User, {
-  foreignKey: 'userId',
-  as: 'author'
-});
-
-TripComment.belongsTo(Trip, {
-  foreignKey: 'tripId',
-  as: 'trip'
-});
+// ========== TripInvite ==========
+TripInvite.belongsTo(Trip, { foreignKey: 'tripId', as: 'trip' });
+TripInvite.belongsTo(User, { foreignKey: 'createdById', as: 'createdBy' });
 
 module.exports = {
   Trip,
@@ -103,5 +54,6 @@ module.exports = {
   TripPlace,
   TripVote,
   TripComment,
-  TripInvite
+  TripInvite,
+  User
 };

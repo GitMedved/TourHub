@@ -1,11 +1,8 @@
-const {
-  DataTypes
-} = require('sequelize');
+const { DataTypes } = require('sequelize');
 
 const sequelize = require('../../config/database');
 
 const TripInvite = sequelize.define('TripInvite', {
-
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
@@ -13,7 +10,7 @@ const TripInvite = sequelize.define('TripInvite', {
   },
 
   token: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(64),
     unique: true,
     allowNull: false
   },
@@ -23,20 +20,37 @@ const TripInvite = sequelize.define('TripInvite', {
     allowNull: false
   },
 
-  invitedBy: {
+  createdById: {
+    type: DataTypes.INTEGER
+  },
+
+  maxUses: {
+    type: DataTypes.INTEGER
+  },
+
+  useCount: {
     type: DataTypes.INTEGER,
+    defaultValue: 0,
     allowNull: false
   },
 
   expiresAt: {
-    type: DataTypes.DATE,
+    type: DataTypes.DATE
+  },
+
+  isRevoked: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
     allowNull: false
+  },
+
+  invitedBy: {
+    type: DataTypes.INTEGER
   },
 
   usedAt: {
     type: DataTypes.DATE
   }
-
 }, {
   tableName: 'trip_invites'
 });

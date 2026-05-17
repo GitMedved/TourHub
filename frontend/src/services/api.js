@@ -20,7 +20,15 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
-    const message = error.response?.data?.error || error.message || 'Ошибка сервера';
+    if (error.response?.status === 403) {
+      return Promise.reject(new Error('Недостаточно прав для этого действия'));
+    }
+
+    if (error.response?.status >= 500) {
+      return Promise.reject(new Error('Ошибка сервера. Попробуйте позже'));
+    }
+
+    const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Ошибка сервера';
     return Promise.reject(new Error(message));
   }
 );

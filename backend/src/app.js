@@ -135,7 +135,8 @@ app.use((err, req, res, next) => {
   res.status(
     err.status || 500
   ).json({
-    error:
+    error: err.code || (err.status === 403 ? 'FORBIDDEN' : 'SERVER_ERROR'),
+    message:
       err.message ||
       'Internal server error'
   });

@@ -9,9 +9,21 @@ const TripPlace = sequelize.define('TripPlace', {
     primaryKey: true
   },
 
-  title: {
-    type: DataTypes.STRING,
+  tripId: {
+    type: DataTypes.UUID,
     allowNull: false
+  },
+
+  addedById: {
+    type: DataTypes.INTEGER
+  },
+
+  name: {
+    type: DataTypes.STRING
+  },
+
+  title: {
+    type: DataTypes.STRING
   },
 
   description: {
@@ -22,12 +34,29 @@ const TripPlace = sequelize.define('TripPlace', {
     type: DataTypes.STRING
   },
 
+  latitude: {
+    type: DataTypes.FLOAT
+  },
+
+  longitude: {
+    type: DataTypes.FLOAT
+  },
+
   lat: {
     type: DataTypes.FLOAT
   },
 
   lng: {
     type: DataTypes.FLOAT
+  },
+
+  notes: {
+    type: DataTypes.TEXT
+  },
+
+  order: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
 
   voteScore: {

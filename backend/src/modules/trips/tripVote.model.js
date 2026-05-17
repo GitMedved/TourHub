@@ -9,10 +9,30 @@ const TripVote = sequelize.define('TripVote', {
     primaryKey: true
   },
 
-  value: {
+  tripPlaceId: {
+    type: DataTypes.UUID
+  },
+
+  userId: {
     type: DataTypes.INTEGER,
     allowNull: false
+  },
+
+  voteType: {
+    type: DataTypes.ENUM('upvote', 'downvote'),
+    allowNull: false
+  },
+
+  value: {
+    type: DataTypes.INTEGER
   }
+}, {
+  indexes: [
+    {
+      unique: true,
+      fields: ['tripPlaceId', 'userId']
+    }
+  ]
 });
 
 module.exports = TripVote;

@@ -27,6 +27,8 @@ export default function TripWorkspacePage() {
 
   const { id } = useParams();
 
+  const socketInstance = socket;
+
   const queryClient =
     useQueryClient();
 
@@ -75,12 +77,15 @@ export default function TripWorkspacePage() {
   useEffect(() => {
 
     if (!id || !currentUser) {
-      return;
+      return undefined;
     }
 
-    socket.emit('trip:join', {
-      tripId: id,
-      user: currentUser
+    if (!socketInstance.connected) {
+      socketInstance.connect();
+    }
+
+    socketInstance.emit('subscribe:trips', {
+      tripIds: [id]
     });
 
     const handlePresence = (
@@ -103,67 +108,107 @@ export default function TripWorkspacePage() {
       }, 2000);
     };
 
-    const refreshTrips = () => {
+    const refreshTrips = (event) => {
+
+      if (
+        event?.tripId &&
+        String(event.tripId) !== String(id)
+      ) {
+        return;
+      }
 
       queryClient.invalidateQueries({
         queryKey: ['trips']
       });
+
+      queryClient.invalidateQueries({
+        queryKey: ['trip', id]
+      });
     };
 
-    socket.on(
+    socketInstance.off(
       'trip:presence',
       handlePresence
     );
 
-    socket.on(
+    socketInstance.off(
       'trip:userTyping',
       handleTyping
     );
 
-    socket.on(
+    socketInstance.off(
       'place:added',
       refreshTrips
     );
 
-    socket.on(
+    socketInstance.off(
       'comment:added',
       refreshTrips
     );
 
-    socket.on(
+    socketInstance.off(
+      'place:voted',
+      refreshTrips
+    );
+
+    socketInstance.on(
+      'trip:presence',
+      handlePresence
+    );
+
+    socketInstance.on(
+      'trip:userTyping',
+      handleTyping
+    );
+
+    socketInstance.on(
+      'place:added',
+      refreshTrips
+    );
+
+    socketInstance.on(
+      'comment:added',
+      refreshTrips
+    );
+
+    socketInstance.on(
       'place:voted',
       refreshTrips
     );
 
     return () => {
 
-      socket.off(
+      socketInstance.emit('unsubscribe:trips', {
+        tripIds: [id]
+      });
+
+      socketInstance.off(
         'trip:presence',
         handlePresence
       );
 
-      socket.off(
+      socketInstance.off(
         'trip:userTyping',
         handleTyping
       );
 
-      socket.off(
+      socketInstance.off(
         'place:added',
         refreshTrips
       );
 
-      socket.off(
+      socketInstance.off(
         'comment:added',
         refreshTrips
       );
 
-      socket.off(
+      socketInstance.off(
         'place:voted',
         refreshTrips
       );
     };
 
-  }, [id, currentUser, queryClient]);
+  }, [id, currentUser, queryClient, socketInstance]);
 
   const addPlaceMutation =
     useMutation({
@@ -459,7 +504,7 @@ export default function TripWorkspacePage() {
                       e.target.value
                     );
 
-                    socket.emit(
+                    socketInstance.emit(
                       'trip:typing',
                       {
                         tripId: id,

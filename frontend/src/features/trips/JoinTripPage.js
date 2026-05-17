@@ -25,14 +25,16 @@ export default function JoinTripPage() {
     mutationFn: () =>
       joinTrip(token),
 
-    onSuccess: (trip) => {
-      navigate(`/trips/${trip.id}`);
+    onSuccess: (result) => {
+      navigate(`/trips/${result.trip.id}`);
     }
   });
 
+  const { mutate } = joinMutation;
+
   useEffect(() => {
-    joinMutation.mutate();
-  }, []);
+    mutate();
+  }, [mutate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

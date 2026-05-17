@@ -19,8 +19,30 @@ const Trip = sequelize.define('Trip', {
   },
 
   destination: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING
+  },
+
+  ownerId: {
+    type: DataTypes.INTEGER,
     allowNull: false
+  },
+
+  startDate: {
+    type: DataTypes.DATE
+  },
+
+  endDate: {
+    type: DataTypes.DATE
+  },
+
+  status: {
+    type: DataTypes.ENUM(
+      'planning',
+      'active',
+      'completed',
+      'archived'
+    ),
+    defaultValue: 'planning'
   },
 
   visibility: {

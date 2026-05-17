@@ -9,6 +9,15 @@ const TripComment = sequelize.define('TripComment', {
     primaryKey: true
   },
 
+  tripId: {
+    type: DataTypes.UUID,
+    allowNull: false
+  },
+
+  authorId: {
+    type: DataTypes.INTEGER
+  },
+
   content: {
     type: DataTypes.TEXT,
     allowNull: false
