@@ -92,4 +92,39 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe };
+
+const socialAuth = async (req, res) => {
+  try {
+    const { provider, telegramId, email, firstName, lastName } = req.body;
+    if (!provider || !['google', 'telegram'].includes(provider)) {
+      return res.status(400).json({ error: 'Invalid provider' });
+    }
+
+    let user = null;
+    if (provider === 'telegram' && telegramId) {
+      user = await User.findOne({ where: { telegramId: String(telegramId) } });
+    }
+    if (!user && email) {
+      user = await User.findOne({ where: { email: email.trim().toLowerCase() } });
+    }
+
+    if (!user) {
+      user = await User.create({
+        email: (email || `${provider}_${Date.now()}@tourhub.local`).trim().toLowerCase(),
+        password: Math.random().toString(36).slice(2) + 'A1!',
+        firstName: firstName || 'Social',
+        lastName: lastName || 'User',
+        role: 'USER',
+        authProvider: provider,
+        telegramId: provider === 'telegram' ? String(telegramId || '') : null
+      });
+    }
+
+    const token = generateToken(user);
+    res.json({ token, user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { register, login, getMe, socialAuth };

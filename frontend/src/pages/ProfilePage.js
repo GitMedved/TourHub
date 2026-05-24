@@ -4,7 +4,6 @@ import { FaCalendarAlt, FaHeadset, FaStar, FaCalendarCheck, FaTimes, FaTicketAlt
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import Header from '../components/Header';
-import { useLanguage } from '../i18n';
 
 const CANCEL_REASONS = [
   'Планы изменились', 'Нашёл более выгодное предложение', 'Не подходит дата',
@@ -51,7 +50,6 @@ const ProfilePage = () => {
   const [cancelModal, setCancelModal] = useState({ open: false, id: null, reason: '' });
   const [reviewModal, setReviewModal] = useState({ open: false, id: null, eventRating: 5, sellerRating: 5, comment: '' });
   const navigate = useNavigate();
-  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     try { setUser(JSON.parse(localStorage.getItem('user'))); } catch {}
@@ -131,20 +129,8 @@ const ProfilePage = () => {
               <div>
                 <h2 className="text-xl font-bold">{user?.firstName} {user?.lastName}</h2>
                 <p className="text-gray-500 text-sm">{user?.email}</p>
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">{language === 'ru' ? 'Путешественник' : 'Traveler'}</span>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">Путешественник</span>
               </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">{t.language}:</label>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="border rounded-lg px-2 py-1 text-sm"
-              >
-                <option value="ru">{t.russian}</option>
-                <option value="en">{t.english}</option>
-              </select>
             </div>
             <button
               onClick={() => setShowMessageModal(true)}

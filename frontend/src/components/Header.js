@@ -11,9 +11,6 @@ const ROLE_CONFIG = {
   USER:    { path: '/profile', label: 'Профиль',           icon: <FaUser />,    color: 'from-blue-500 to-purple-500' },
 };
 
-const NAV_LINKS = [
-  { path: '/events', labelKey: 'navCommunity' },
-];
 
 const Header = () => {
   const [user, setUser] = useState(null);
@@ -66,21 +63,6 @@ const Header = () => {
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
-          {NAV_LINKS.map(link => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                location.pathname === link.path
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
-              }`}
-            >
-              {t[link.labelKey]}
-            </Link>
-          ))}
-        </nav>
 
         <div className="flex items-center gap-2">
           {user ? (
@@ -114,6 +96,17 @@ const Header = () => {
                       <span className="text-blue-500">{roleConfig.icon}</span>
                       {roleConfig.label}
                     </Link>
+                  )}
+
+                  <Link
+                    to="/settings"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-gray-700 text-sm transition"
+                  >
+                    Настройки
+                  </Link>
+
+                  {
                   )}
 
                   {user.role === 'USER' && (

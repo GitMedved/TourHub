@@ -6,11 +6,11 @@ import {
 import { useLanguage } from '../i18n';
 
 import {
-  FaHome,
   FaMapMarkedAlt,
   FaUser,
   FaUsers,
-  FaCompass
+  FaCompass,
+  FaCog
 } from 'react-icons/fa';
 
 const navItems = [
@@ -36,6 +36,11 @@ const navItems = [
     to: '/profile',
     icon: FaUser,
     labelKey: 'sidebarProfile'
+  },
+  {
+    to: '/settings',
+    icon: FaCog,
+    labelKey: 'language'
   }
 ];
 

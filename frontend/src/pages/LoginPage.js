@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock } from 'react-icons/fa';
+import { FaGoogle, FaTelegramPlane } from 'react-icons/fa';
 import api from '../services/api';
 
 const LoginPage = () => {
@@ -19,6 +20,23 @@ const LoginPage = () => {
     if (!password) e.password = 'Введите пароль';
     setErrors(e);
     return Object.keys(e).length === 0;
+  };
+
+
+  const handleSocialAuth = async (provider) => {
+    try {
+      const payload = provider === 'google'
+        ? { provider: 'google', email: `google_${Date.now()}@mail.com`, firstName: 'Google', lastName: 'User' }
+        : { provider: 'telegram', telegramId: Date.now(), email: `telegram_${Date.now()}@mail.com`, firstName: 'Telegram', lastName: 'User' };
+      const { data } = await api.post('/auth/social', payload);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      window.dispatchEvent(new Event('storage'));
+      toast.success('Вход выполнен');
+      navigate('/');
+    } catch (err) {
+      toast.error('Ошибка social auth');
+    }
   };
 
   const handleSubmit = async (ev) => {
@@ -99,6 +117,11 @@ const LoginPage = () => {
               ) : 'Войти'}
             </button>
           </form>
+
+          <div className="mt-5 space-y-2">
+            <button type="button" onClick={() => handleSocialAuth('google')} className="w-full border rounded-xl py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50"><FaGoogle /> Продолжить с Google</button>
+            <button type="button" onClick={() => handleSocialAuth('telegram')} className="w-full border rounded-xl py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50"><FaTelegramPlane /> Продолжить через Telegram</button>
+          </div>
 
           <div className="mt-6 pt-6 border-t border-gray-100 text-center">
             <p className="text-gray-500 text-sm">
