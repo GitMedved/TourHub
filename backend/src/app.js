@@ -10,6 +10,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 
 const tripRoutes = require('./modules/trips/trip.routes');
+const telegramRoutes = require('./modules/telegram/telegram.routes');
 
 const app = express();
 
@@ -103,6 +104,11 @@ app.use(
 app.use(
   '/api/upload',
   uploadRoutes
+);
+
+app.use(
+  '/api/telegram',
+  telegramRoutes
 );
 
 app.use(

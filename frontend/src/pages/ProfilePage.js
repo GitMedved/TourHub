@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaCalendarAlt, FaHeadset, FaStar, FaCalendarCheck, FaTimes, FaTicketAlt, FaRubleSign } from 'react-icons/fa';
+import { FaCalendarAlt, FaHeadset, FaStar, FaCalendarCheck, FaTimes, FaTicketAlt, FaRubleSign, FaUser } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import Header from '../components/Header';
+import { useLanguage } from '../i18n';
 
 const CANCEL_REASONS = [
   'Планы изменились', 'Нашёл более выгодное предложение', 'Не подходит дата',
@@ -50,6 +51,7 @@ const ProfilePage = () => {
   const [cancelModal, setCancelModal] = useState({ open: false, id: null, reason: '' });
   const [reviewModal, setReviewModal] = useState({ open: false, id: null, eventRating: 5, sellerRating: 5, comment: '' });
   const navigate = useNavigate();
+  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     try { setUser(JSON.parse(localStorage.getItem('user'))); } catch {}
@@ -59,7 +61,8 @@ const ProfilePage = () => {
   const loadBookings = async () => {
     try {
       const r = await api.get('/bookings/my');
-      setBookings(r.data.content || r.data || []);
+      const normalized = Array.isArray(r.data?.content) ? r.data.content : (Array.isArray(r.data) ? r.data : []);
+      setBookings(normalized.filter(Boolean));
     } catch { toast.error('Ошибка загрузки бронирований'); }
     finally { setLoading(false); }
   };
@@ -128,8 +131,20 @@ const ProfilePage = () => {
               <div>
                 <h2 className="text-xl font-bold">{user?.firstName} {user?.lastName}</h2>
                 <p className="text-gray-500 text-sm">{user?.email}</p>
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">Путешественник</span>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">{language === 'ru' ? 'Путешественник' : 'Traveler'}</span>
               </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">{t.language}:</label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="border rounded-lg px-2 py-1 text-sm"
+              >
+                <option value="ru">{t.russian}</option>
+                <option value="en">{t.english}</option>
+              </select>
             </div>
             <button
               onClick={() => setShowMessageModal(true)}
@@ -142,9 +157,9 @@ const ProfilePage = () => {
 
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[
-            { label: 'Всего', value: bookings.length, icon: '🎫' },
-            { label: 'Активных', value: bookings.filter(b => ['CREATED','CONFIRMED'].includes(b.status)).length, icon: '⏳' },
-            { label: 'Завершено', value: bookings.filter(b => b.status === 'COMPLETED').length, icon: '✅' },
+            { label: 'Всего', value: bookings.length, icon: <FaTicketAlt className='mx-auto text-blue-500' /> },
+            { label: 'Активных', value: bookings.filter(b => ['CREATED','CONFIRMED'].includes(b.status)).length, icon: <FaCalendarCheck className='mx-auto text-amber-500' /> },
+            { label: 'Завершено', value: bookings.filter(b => b.status === 'COMPLETED').length, icon: <FaStar className='mx-auto text-green-500' /> },
           ].map((s, i) => (
             <div key={i} className="bg-white rounded-2xl shadow-sm p-4 text-center">
               <div className="text-2xl mb-1">{s.icon}</div>
@@ -163,7 +178,7 @@ const ProfilePage = () => {
 
           {bookings.length === 0 ? (
             <div className="text-center py-16">
-              <div className="text-5xl mb-4">🗺️</div>
+              <div className="text-5xl mb-4 flex justify-center"><FaCalendarAlt className='text-blue-500' /></div>
               <p className="text-gray-500 mb-2">У вас пока нет бронирований</p>
               <Link to="/" className="text-blue-600 text-sm hover:underline">Найти тур</Link>
             </div>
@@ -185,8 +200,8 @@ const ProfilePage = () => {
                           {b.event?.title || b.Event?.title || `Бронирование #${b.id}`}
                         </h4>
                         <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-500">
-                          <span>📅 {new Date(b.eventDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                          <span>👥 {b.participants} чел.</span>
+                          <span><FaCalendarAlt className='inline mr-1 text-blue-400' />{new Date(b.eventDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                          <span><FaUser className='inline mr-1 text-gray-400' />{b.participants} чел.</span>
                           <span className="font-semibold text-blue-600">
                             {parseFloat(b.totalPrice || 0).toLocaleString('ru-RU')} ₽
                           </span>
