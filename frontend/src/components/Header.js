@@ -106,9 +106,6 @@ const Header = () => {
                     Настройки
                   </Link>
 
-                  {
-                  )}
-
                   {user.role === 'USER' && (
                     <Link
                       to="/chat"
