@@ -1,7 +1,7 @@
 import LoadingScreen from '../components/LoadingScreen';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FaStar, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaArrowLeft, FaQuestionCircle, FaHeart, FaRegHeart, FaShareAlt } from 'react-icons/fa';
+import { FaStar, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaArrowLeft, FaQuestionCircle, FaHeart, FaRegHeart, FaShareAlt, FaThumbsUp, FaThumbsDown, FaMapMarkedAlt, FaUser } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import Header from '../components/Header';
@@ -26,7 +26,7 @@ const SellerEvents = ({ sellerId, currentEventId }) => {
         {events.map(event => (
           <Link to={`/event/${event.id}`} key={event.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition group">
             <div className="h-32 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl">
-              {event.previewImage ? <img src={`http://localhost:5001${event.previewImage}`} alt="" className="w-full h-full object-cover" /> : '🏔️'}
+              {event.previewImage ? <img src={`http://localhost:5001${event.previewImage}`} alt="" className="w-full h-full object-cover" /> : <FaMapMarkedAlt />} 
             </div>
             <div className="p-3"><h3 className="font-medium text-sm text-gray-800 line-clamp-2">{event.title}</h3><p className="text-xs text-gray-500 mt-1">${parseFloat(event.price).toFixed(0)} • {event.durationDays}д</p></div>
           </Link>
@@ -96,6 +96,7 @@ const EventDetailPage = () => {
   const [phoneError, setPhoneError] = useState('');
   const [dateError, setDateError] = useState('');
   const [wishlistSaved, setWishlistSaved] = useState(false);
+  const [reaction, setReaction] = useState(null);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [bookingData, setBookingData] = useState({
     participants: 1, contactName: '', contactPhone: '', contactEmail: '', specialRequests: '', eventDate: ''
@@ -172,6 +173,8 @@ const EventDetailPage = () => {
     const userData = localStorage.getItem('user');
     if (userData) { setUser(JSON.parse(userData)); loadUserProfile(); }
     loadEvent();
+    const storedReaction = localStorage.getItem(`event_reaction_${id}`);
+    setReaction(storedReaction);
   }, [id]);
 
   useEffect(() => {
@@ -321,6 +324,8 @@ const EventDetailPage = () => {
                 <button onClick={toggleWishlist} disabled={wishlistLoading} className={`px-5 py-2.5 rounded-full text-sm font-medium transition flex items-center gap-2 ${wishlistSaved ? 'bg-rose-50 text-rose-600 hover:bg-rose-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
                   {wishlistSaved ? <FaHeart /> : <FaRegHeart />} {wishlistSaved ? 'Сохранено' : 'В избранное'}
                 </button>
+                <button onClick={() => { const next = reaction === 'like' ? null : 'like'; setReaction(next); localStorage.setItem(`event_reaction_${event.id}`, next || ''); }} className={`px-4 py-2.5 rounded-full text-sm font-medium transition flex items-center gap-2 ${reaction==='like'?'bg-emerald-100 text-emerald-700':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}><FaThumbsUp /> Нравится</button>
+                <button onClick={() => { const next = reaction === 'dislike' ? null : 'dislike'; setReaction(next); localStorage.setItem(`event_reaction_${event.id}`, next || ''); }} className={`px-4 py-2.5 rounded-full text-sm font-medium transition flex items-center gap-2 ${reaction==='dislike'?'bg-amber-100 text-amber-700':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}><FaThumbsDown /> Не нравится</button>
                 <button onClick={shareEvent} className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 transition flex items-center gap-2"><FaShareAlt /> Поделиться</button>
                 {user?.role === 'USER' && (
                   <button onClick={() => setShowBookingForm(!showBookingForm)} className="px-5 py-2.5 bg-green-500 text-white rounded-full text-sm font-medium hover:bg-green-600 transition">
@@ -336,7 +341,7 @@ const EventDetailPage = () => {
                 <h3 className="text-lg font-semibold mb-4">Оформление бронирования</h3>
                 {userProfile && (
                   <div className="bg-blue-50 rounded-xl p-4 mb-4 text-sm">
-                    <p className="text-blue-700 font-medium">👤 {bookingData.contactName}</p>
+                    <p className="text-blue-700 font-medium"> {bookingData.contactName}</p>
                     <p className="text-blue-600">{bookingData.contactEmail}</p>
                   </div>
                 )}

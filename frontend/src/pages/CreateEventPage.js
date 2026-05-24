@@ -98,13 +98,13 @@ const CreateEventPage = () => {
 
   // Автозаполнение региона при вводе города
   useEffect(() => {
-    if (formData.city && formData.city.length > 2) {
+    if (formData.address && formData.address.length > 5) {
       const timer = setTimeout(() => {
-        if (!formData.latitude) geocodeAddress();
-      }, 1500);
+        geocodeAddress();
+      }, 900);
       return () => clearTimeout(timer);
     }
-  }, [formData.city]);
+  }, [formData.address]);
 
   const handleImageUpload = (e, type) => {
     const file = e.target.files[0];
