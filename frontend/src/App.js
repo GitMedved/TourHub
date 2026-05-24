@@ -21,6 +21,8 @@ import {
 import HomePage from './pages/HomePage';
 import MapPage from './pages/MapPage';
 import EventDetailPage from './pages/EventDetailPage';
+import EventsPage from './pages/EventsPage';
+import CreateEventPage from './pages/CreateEventPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
@@ -219,6 +221,18 @@ function AppContent() {
         <Route
           path="/map"
           element={<MapPage />}
+        />
+
+        <Route
+          path="/events"
+          element={<EventsPage />}
+        />
+
+        <Route
+          path="/events/create"
+          element={<ProtectedRoute roles={['SELLER']}>
+            <CreateEventPage />
+          </ProtectedRoute>}
         />
 
         <Route

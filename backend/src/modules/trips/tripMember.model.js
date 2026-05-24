@@ -32,6 +32,12 @@ const TripMember = sequelize.define('TripMember', {
     allowNull: false
   },
 
+  joinedVia: {
+    type: DataTypes.ENUM('invite', 'telegram', 'direct'),
+    defaultValue: 'direct',
+    allowNull: false
+  },
+
   joinedAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,

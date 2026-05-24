@@ -45,6 +45,25 @@ const Trip = sequelize.define('Trip', {
     defaultValue: 'planning'
   },
 
+  telegramGroupId: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+
+  telegramGroupName: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+
+  notificationMode: {
+    type: DataTypes.ENUM(
+      'all',
+      'important',
+      'off'
+    ),
+    defaultValue: 'all'
+  },
+
   visibility: {
     type: DataTypes.ENUM(
       'PRIVATE',
