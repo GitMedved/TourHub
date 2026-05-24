@@ -11,9 +11,7 @@ const ROLE_CONFIG = {
 };
 
 const NAV_LINKS = [
-  { path: '/',      label: 'Главная' },
-  { path: '/events', label: 'Все туры' },
-  { path: '/map',   label: 'Карта' },
+  { path: '/events', label: 'Сообщество' },
 ];
 
 const Header = () => {
@@ -122,7 +120,7 @@ const Header = () => {
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-gray-700 text-sm transition"
                     >
-                      <span>💬</span> Чат с поддержкой
+                      <FaUserTie /> Чат с поддержкой
                     </Link>
                   )}
 
