@@ -21,10 +21,13 @@ import {
 import HomePage from './pages/HomePage';
 import MapPage from './pages/MapPage';
 import EventDetailPage from './pages/EventDetailPage';
+import EventsPage from './pages/EventsPage';
+import CreateEventPage from './pages/CreateEventPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/AdminDashboard';
+import SettingsPage from './pages/SettingsPage';
 
 import Sidebar from './components/Sidebar';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -32,6 +35,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import TripsPage from './features/trips/TripsPage';
 import TripWorkspacePage from './features/trips/TripWorkspacePage';
 import JoinTripPage from './features/trips/JoinTripPage';
+import { useLanguage } from './i18n';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,7 +95,9 @@ const ProtectedRoute = ({
   return children;
 };
 
-const NotFound = () => (
+const NotFound = () => {
+  const { t } = useLanguage();
+  return (
   <div className="
     min-h-screen
     flex
@@ -112,11 +118,11 @@ const NotFound = () => (
         text-gray-900
         mb-3
       ">
-        Page not found
+        {t.notFoundTitle}
       </h1>
 
       <p className="text-gray-500 mb-6">
-        This route does not exist
+        {t.notFoundText}
       </p>
 
       <a
@@ -129,13 +135,14 @@ const NotFound = () => (
           rounded-2xl
         "
       >
-        Back home
+        {t.backHome}
       </a>
 
     </div>
 
   </div>
 );
+};
 
 function AppContent() {
 
@@ -222,6 +229,18 @@ function AppContent() {
         />
 
         <Route
+          path="/events"
+          element={<EventsPage />}
+        />
+
+        <Route
+          path="/events/create"
+          element={<ProtectedRoute roles={['SELLER']}>
+            <CreateEventPage />
+          </ProtectedRoute>}
+        />
+
+        <Route
           path="/event/:id"
           element={<EventDetailPage />}
         />
@@ -234,6 +253,11 @@ function AppContent() {
         <Route
           path="/register"
           element={<RegisterPage />}
+        />
+
+        <Route
+          path="/settings"
+          element={<ProtectedRoute><SettingsPage /></ProtectedRoute>}
         />
 
         <Route

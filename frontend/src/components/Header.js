@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaMapMarkerAlt, FaSignOutAlt, FaStore, FaUserTie, FaCrown, FaUser, FaChevronDown } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { useLanguage } from '../i18n';
 
 const ROLE_CONFIG = {
   ADMIN:   { path: '/admin',   label: 'Админ панель',      icon: <FaCrown />,   color: 'from-red-500 to-pink-500' },
@@ -10,11 +11,6 @@ const ROLE_CONFIG = {
   USER:    { path: '/profile', label: 'Профиль',           icon: <FaUser />,    color: 'from-blue-500 to-purple-500' },
 };
 
-const NAV_LINKS = [
-  { path: '/',      label: 'Главная' },
-  { path: '/events', label: 'Все туры' },
-  { path: '/map',   label: 'Карта' },
-];
 
 const Header = () => {
   const [user, setUser] = useState(null);
@@ -22,6 +18,7 @@ const Header = () => {
   const menuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const sync = () => {
@@ -66,21 +63,6 @@ const Header = () => {
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
-          {NAV_LINKS.map(link => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                location.pathname === link.path
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
 
         <div className="flex items-center gap-2">
           {user ? (
@@ -116,13 +98,21 @@ const Header = () => {
                     </Link>
                   )}
 
+                  <Link
+                    to="/settings"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-gray-700 text-sm transition"
+                  >
+                    Настройки
+                  </Link>
+
                   {user.role === 'USER' && (
                     <Link
                       to="/chat"
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-gray-700 text-sm transition"
                     >
-                      <span>💬</span> Чат с поддержкой
+                      <FaUserTie /> {t.supportChat}
                     </Link>
                   )}
 

@@ -3,42 +3,49 @@ import React from 'react';
 import {
   NavLink
 } from 'react-router-dom';
+import { useLanguage } from '../i18n';
 
 import {
-  FaHome,
   FaMapMarkedAlt,
   FaUser,
   FaUsers,
-  FaCompass
+  FaCompass,
+  FaCog
 } from 'react-icons/fa';
 
 const navItems = [
   {
     to: '/',
     icon: FaCompass,
-    label: 'Discover'
+    labelKey: 'sidebarDiscover'
   },
 
   {
     to: '/trips',
     icon: FaUsers,
-    label: 'Trips'
+    labelKey: 'sidebarTrips'
   },
 
   {
     to: '/map',
     icon: FaMapMarkedAlt,
-    label: 'Map'
+    labelKey: 'sidebarMap'
   },
 
   {
     to: '/profile',
     icon: FaUser,
-    label: 'Profile'
+    labelKey: 'sidebarProfile'
+  },
+  {
+    to: '/settings',
+    icon: FaCog,
+    labelKey: 'language'
   }
 ];
 
 function Sidebar() {
+  const { t } = useLanguage();
 
   const user = (() => {
     try {
@@ -121,7 +128,7 @@ function Sidebar() {
                 whitespace-nowrap
                 pointer-events-none
               ">
-                {item.label}
+                {t[item.labelKey]}
               </span>
 
             </NavLink>

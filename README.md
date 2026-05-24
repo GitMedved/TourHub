@@ -1,182 +1,201 @@
 # TourHub
 
-TourHub — платформа для поиска, сохранения и бронирования авторских туров, экскурсий и локальных впечатлений.
+TourHub — платформа для поиска, создания и совместного планирования путешествий.
 
-## Стек
+Проект объединяет:
+- **каталог событий/туров** (поиск, бронирование, избранное, отзывы),
+- **коллаборативные Trip workspace** (участники, места, голоса, комментарии, инвайты),
+- **Telegram-интеграцию (MVP)** для работы с Trip из групповых чатов,
+- **переключение языка интерфейса RU/EN** в настройках профиля.
+
+---
+
+## Технологический стек
 
 - **Frontend**: React 18, React Router, React Query, Tailwind CSS
-- **Backend**: Node.js, Express, Sequelize
+- **Backend**: Node.js, Express, Sequelize, Socket.IO
 - **База данных**: PostgreSQL 15
-- **Безопасность API**: Helmet, CORS allowlist, rate limiting, JWT auth
-- **Медиа**: Multer + Sharp для загрузки и оптимизации изображений
+- **Безопасность API**: Helmet, CORS allowlist, rate limiting, JWT
+- **Файлы и медиа**: Multer + Sharp
+
+---
+
+## Актуальные возможности
+
+### Пользовательская часть
+- Регистрация/вход, ролевой доступ.
+- Каталог туров/ивентов, карточки, детали событий.
+- Бронирования в личном кабинете.
+- Избранное и отзывы.
+- Страница карты на базе **OpenStreetMap** (fallback без Google Maps API).
+
+### Trip workspace
+- Создание поездок (Trip), участники и роли.
+- Добавление мест, комментарии, голосования.
+- Инвайт-ссылки для присоединения.
+- Realtime-синхронизация через Socket.IO (trip events).
+
+### Telegram Bot Integration (MVP)
+Реализован webhook-модуль backend (`/api/telegram/webhook`) с базовой поддержкой:
+- `/help`
+- `/create_trip Название`
+- `/create_trip Название | дд.мм.гггг | дд.мм.гггг`
+- `/trips`
+
+В рамках MVP:
+- Trip, созданный из Telegram, связывается с Telegram-группой.
+- Пользователь определяется/создаётся по Telegram ID.
+- В ответах используется Markdown и ссылка на открытие Trip в веб-интерфейсе.
+
+### Языки интерфейса
+- Добавлен RU/EN language provider.
+- Переключение языка доступно в профиле (настройки).
+- Выбор языка сохраняется в `localStorage` (`tourhub_language`).
+
+---
 
 ## Быстрый старт
 
-### 1. Установить зависимости
+## 1) Установка зависимостей
 
 ```bash
 cd backend && npm install
 cd ../frontend && npm install
+cd ..
 ```
 
-### 2. Настроить переменные окружения
+## 2) Переменные окружения
 
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Для production обязательно замените `JWT_SECRET` на длинное случайное значение.
+Минимально проверьте:
+- `backend/.env`: `PORT`, `JWT_SECRET`, `DATABASE_URL`/DB-параметры, `CLIENT_URL`
+- `frontend/.env`: URL backend API
 
-### 3. Запустить PostgreSQL
+Для Telegram webhook дополнительно:
+- `TELEGRAM_WEBHOOK_SECRET` — секретный токен для валидации Telegram webhook
+- `TELEGRAM_BOT_LINK` — ссылка на бота (используется в ответах)
+- `CLIENT_URL` — базовый URL frontend для ссылок на Trip
 
-Рекомендуемый вариант — Docker Compose:
+## 3) Запуск PostgreSQL
+
+Рекомендуемый путь:
 
 ```bash
 bash scripts/start-db.sh
 ```
 
-Скрипт сначала проверит, не запущен ли PostgreSQL уже на `DB_HOST:DB_PORT`. Если база доступна, он не будет стартовать второй экземпляр. Если база не запущена, скрипт попробует Docker Compose, затем macOS LaunchDaemon/локальный PostgreSQL 15 по пути `/Library/PostgreSQL/15`.
-
-### 4. Запустить приложение
+## 4) Запуск приложения
 
 ```bash
 bash scripts/full-start.sh
 ```
 
-`full-start.sh` можно вызывать из корня проекта командой выше; внутри скрипт сам вычисляет абсолютный путь к репозиторию и запускает backend/frontend из правильных директорий.
-
-Также доступны root npm-команды:
-
-```bash
-npm run doctor      # проверить env, зависимости и занятые порты
-npm run install:all # установить backend + frontend зависимости
-npm start           # запустить TourHub
-npm stop            # остановить TourHub и освободить порты
-```
-
 Адреса по умолчанию:
-
 - Frontend: <http://localhost:3000>
 - Backend API: <http://localhost:5001/api>
-- Healthcheck: <http://localhost:5001/api/health>
+- Health: <http://localhost:5001/api/health>
 
+---
 
-## Troubleshooting запуска
+## Полезные команды
 
-### Как обновить уже склонированный репозиторий
-
-Если репозиторий уже был склонирован раньше, сначала подтяните последние исправления скриптов:
+Из корня репозитория:
 
 ```bash
-git pull
-git log --oneline -3
-bash scripts/doctor.sh
+npm run doctor      # диагностика окружения
+npm run install:all # установка всех зависимостей
+npm start           # запуск всех сервисов
+npm stop            # остановка сервисов
+```
+
+Backend:
+
+```bash
+cd backend
+npm run dev
+npm run test:telegram
+```
+
+---
+
+## API-модули (кратко)
+
+- `/api/auth` — аутентификация
+- `/api/events` — события/туры
+- `/api/bookings` — бронирования
+- `/api/trips` — collaborative trip workspace
+- `/api/telegram/webhook` — Telegram Bot webhook (MVP)
+
+---
+
+## Структура проекта
+
+```text
+TourHub/
+├── backend/
+│   ├── src/
+│   │   ├── modules/trips/
+│   │   ├── modules/telegram/
+│   │   ├── routes/
+│   │   └── models/
+├── frontend/
+│   └── src/
+│       ├── components/
+│       ├── pages/
+│       ├── features/trips/
+│       └── i18n.js
+├── scripts/
+├── test/e2e/
+└── README.md
+```
+
+---
+
+## Важные замечания
+
+- Сейчас backend в dev использует `sequelize.sync({ alter: true })`.
+  Для production рекомендуется миграционный процесс и отключение auto-alter.
+- Telegram-интеграция сейчас на уровне MVP; команды `/trip`, `/add_place`, `/vote`, `/notifications` и расширенный anti-spam/metrics требуют следующих итераций.
+- Если frontend-тесты не запускаются с ошибкой `react-scripts: not found`, сначала выполните `npm install` в `frontend/`.
+
+---
+
+## Troubleshooting
+
+### Порт backend занят (`EADDRINUSE: :::5001`)
+
+```bash
 bash scripts/stop-all.sh
 ```
 
-Если `git pull` пишет `Already up to date`, но в выводе `bash scripts/stop-all.sh` всё ещё видно старое сообщение `Stopping all services...`, значит локальная ветка смотрит на версию без последних исправлений. Проверьте текущую ветку и remote/PR, затем повторите `git pull` после merge нужного PR.
-
-### `frontend/node_modules not found` или `backend/node_modules not found`
-
-Установите зависимости в соответствующей папке. Важно: `cd` и `npm install` — это две отдельные команды, либо одна команда через `&&`:
-
-```bash
-cd backend && npm install
-cd ../frontend && npm install
-cd ..
-```
-
-Можно также отдельно:
-
-```bash
-cd frontend
-npm install
-cd ..
-```
-
-### `EADDRINUSE: address already in use :::5001`
-
-На порту backend уже висит старый процесс. Остановите его:
-
-```bash
-bash scripts/stop-all.sh
-```
-
-Если нужно вручную:
+или вручную:
 
 ```bash
 lsof -tiTCP:5001 -sTCP:LISTEN | xargs kill
 ```
 
-### PostgreSQL на macOS просит пароль или уже запущен
+### Не найдены зависимости frontend/backend
 
-Это нормально для локального PostgreSQL, установленного через EnterpriseDB/Postgres.app. `scripts/start-db.sh` сначала проверяет существующее TCP-подключение и не вызывает `pg_ctl`, если база уже работает.
+```bash
+cd backend && npm install
+cd ../frontend && npm install
+```
 
-Если PostgreSQL не стартует автоматически, запустите его вручную или используйте Docker Compose:
+### PostgreSQL уже запущен/не запускается
 
 ```bash
 docker compose up -d postgres
 ```
 
-## Скрипты
+---
 
-| Скрипт | Описание |
-|--------|----------|
-| `scripts/start-db.sh` | Запустить PostgreSQL через Docker Compose или локальный PostgreSQL 15 |
-| `scripts/full-start.sh` | Запустить PostgreSQL, backend и frontend |
-| `scripts/stop-all.sh` | Остановить процессы из pid-файлов и освободить порты backend/frontend |
-| `scripts/restart-all.sh` | Перезапустить всё |
-| `scripts/create-users.sh` | Создать тестовых пользователей |
-| `scripts/doctor.sh` | Проверить env-файлы, зависимости и занятые dev-порты |
+## Roadmap (high-level)
 
-## Структура
-
-```text
-TourHub/
-├── backend/          # Express API, Sequelize models, routes, uploads
-├── frontend/         # React SPA
-├── scripts/          # Вспомогательные shell-скрипты
-├── test/e2e/         # E2E/UX проверки
-├── docker-compose.yml
-└── README.md
-```
-
-## Основные возможности
-
-- Регистрация и вход пользователей через JWT.
-- Роли пользователей: пользователь, продавец, менеджер/админ.
-- Каталог опубликованных туров с рейтингами и отзывами.
-- Бронирования с привязкой к событию, пользователю и продавцу.
-- Отзывы с модерацией и пересчётом рейтингов.
-- Избранное: сохранение понравившихся туров.
-- Загрузка изображений для событий.
-
-## Backend notes
-
-- В development сервер использует `sequelize.sync({ alter: true })` для быстрой разработки.
-- Для production рекомендуется перейти на миграции и отключить автоматический `alter`.
-- `JWT_SECRET` обязателен при `NODE_ENV=production`.
-- CORS allowlist задаётся через `CLIENT_URLS` в формате списка через запятую.
-
-## Product roadmap
-
-### Стабилизация
-
-- Закрыть критические баги бронирования и авторизации.
-- Добавить единый формат ошибок и валидацию входных данных.
-- Настроить CI для syntax/build/test checks.
-
-### Продукт
-
-- Улучшить rich-страницы туров: галерея, карта, программа по дням, FAQ, условия отмены.
-- Расширить избранное до shareable wishlist.
-- Добавить отзывы с фото, бейджи доверия и показатели продавца.
-- Довести Lighthouse performance/a11y до стабильных зелёных метрик.
-
-### Рост
-
-- AI Trip Copilot: подбор маршрута по бюджету, датам и стилю.
-- Smart Route Builder: карта, порядок точек, оценка времени в пути.
-- Collaborative planning: совместные подборки, голосование и общий бюджет.
-- SEO-контент по направлениям, hidden gems и готовым маршрутам.
+- Расширение Telegram-модуля до полного набора команд и inline-voting.
+- Группировка и режимы Telegram-уведомлений (`all` / `important` / `off`).
+- Полное покрытие интерфейса i18n для всех страниц.
+- CI-пайплайн на lint/test/build.
