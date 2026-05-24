@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
-    "seed": "sequelize-cli db:seed:all"
+    "seed": "sequelize-cli db:seed:all",
+    "test:telegram": "node src/tests/telegram.parser.test.js"
   },
   "dependencies": {
     "axios": "^1.6.2",

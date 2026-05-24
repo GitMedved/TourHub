@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaStar, FaMapMarkerAlt, FaKey } from 'react-icons/fa';
+import { FaStar, FaMapMarkerAlt, FaMapMarkedAlt } from 'react-icons/fa';
 import api from '../services/api';
 import Header from '../components/Header';
 import LoadingScreen from '../components/LoadingScreen';
@@ -9,7 +9,6 @@ const MapPage = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRegion, setSelectedRegion] = useState('all');
-  const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
     api.get('/events').then(res => {
@@ -31,50 +30,19 @@ const MapPage = () => {
       <div className="container mx-auto px-4 py-6">
         <h1 className="text-2xl font-bold mb-4">Карта событий</h1>
         
-        {apiKey ? (
-          /* Карта с Google Maps */
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-            <div className="h-96 bg-gray-200 flex items-center justify-center text-gray-500">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🗺️</div>
-                <p>Карта загружается...</p>
-              </div>
-            </div>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="h-96">
+            <iframe
+              title="OpenStreetMap"
+              width="100%"
+              height="100%"
+              loading="lazy"
+              src="https://www.openstreetmap.org/export/embed.html"
+              className="border-0"
+            />
           </div>
-        ) : (
-          /* Заглушка с инструкцией */
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 mb-6 border-2 border-dashed border-gray-300">
-            <div className="text-center">
-              <div className="text-6xl mb-4">🗺️</div>
-              <h2 className="text-xl font-semibold mb-2">Интерактивная карта</h2>
-              <p className="text-gray-600 mb-4">
-                Для активации карты добавьте API ключ Google Maps
-              </p>
-              
-              <div className="max-w-md mx-auto space-y-4">
-                <div className="bg-white rounded-xl p-4 shadow-sm">
-                  <code className="text-sm text-gray-700 break-all">
-                    REACT_APP_GOOGLE_MAPS_API_KEY=your_key_here
-                  </code>
-                </div>
-                
-                <a
-                  href="https://console.cloud.google.com/google/maps-apis"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-xl hover:bg-blue-700 transition"
-                >
-                  <FaKey />
-                  Получить API ключ Google Maps
-                </a>
-                
-                <p className="text-xs text-gray-400">
-                  Ключ нужно добавить в файл frontend/.env
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+          <div className="p-3 text-sm text-gray-500 flex items-center gap-2"><FaMapMarkedAlt /> Бесплатная карта OpenStreetMap</div>
+        </div>
 
         {/* Фильтр регионов */}
         <div className="flex flex-wrap gap-2 mb-6">
@@ -99,7 +67,7 @@ const MapPage = () => {
               <div className="h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg mb-3 flex items-center justify-center text-white text-2xl overflow-hidden">
                 {event.previewImage ? (
                   <img src={`http://localhost:5001${event.previewImage}`} alt="" className="w-full h-full object-cover" loading="lazy" />
-                ) : '🏔️'}
+) : <FaMapMarkedAlt />} 
               </div>
               <h3 className="font-semibold line-clamp-2">{event.title}</h3>
               <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">

@@ -13,13 +13,18 @@ const User = sequelize.define('User', {
   companyName: DataTypes.STRING,
   phone: DataTypes.STRING,
   avatar: DataTypes.STRING,
-  lastLogin: DataTypes.DATE
+  lastLogin: DataTypes.DATE,
+  telegramId: { type: DataTypes.STRING, unique: true, allowNull: true },
+  telegramUsername: { type: DataTypes.STRING, allowNull: true },
+  authProvider: { type: DataTypes.ENUM('email','telegram','google'), allowNull: false, defaultValue: 'email' },
+  telegramPhotoUrl: { type: DataTypes.STRING, allowNull: true }
 }, {
   timestamps: true,
   indexes: [
     { fields: ['email'] },
     { fields: ['role'] },
-    { fields: ['isActive'] }
+    { fields: ['isActive'] },
+    { fields: ['telegramId'] }
   ]
 });
 

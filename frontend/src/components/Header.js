@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaMapMarkerAlt, FaSignOutAlt, FaStore, FaUserTie, FaCrown, FaUser, FaChevronDown } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { useLanguage } from '../i18n';
 
 const ROLE_CONFIG = {
   ADMIN:   { path: '/admin',   label: 'Админ панель',      icon: <FaCrown />,   color: 'from-red-500 to-pink-500' },
@@ -11,9 +12,7 @@ const ROLE_CONFIG = {
 };
 
 const NAV_LINKS = [
-  { path: '/',      label: 'Главная' },
-  { path: '/events', label: 'Все туры' },
-  { path: '/map',   label: 'Карта' },
+  { path: '/events', labelKey: 'navCommunity' },
 ];
 
 const Header = () => {
@@ -22,6 +21,7 @@ const Header = () => {
   const menuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const sync = () => {
@@ -77,7 +77,7 @@ const Header = () => {
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
               }`}
             >
-              {link.label}
+              {t[link.labelKey]}
             </Link>
           ))}
         </nav>
@@ -122,7 +122,7 @@ const Header = () => {
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-gray-700 text-sm transition"
                     >
-                      <span>💬</span> Чат с поддержкой
+                      <FaUserTie /> {t.supportChat}
                     </Link>
                   )}
 
