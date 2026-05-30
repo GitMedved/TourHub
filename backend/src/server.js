@@ -30,7 +30,11 @@ require('./models/Wishlist');
 
 require('./modules/trips/trip.associations');
 
-const PORT = process.env.PORT || 5001;
+const DEFAULT_PORT = 5001;
+const PORT = Number(process.env.PORT || DEFAULT_PORT);
+const MAX_AUTO_PORT_ATTEMPTS = Number(process.env.MAX_AUTO_PORT_ATTEMPTS || 10);
+
+const isDefaultPort = !process.env.PORT;
 
 function listen(server, port) {
 
@@ -58,12 +62,58 @@ function listen(server, port) {
   });
 }
 
+function isPortInUse(error) {
+
+  return error.code === 'EADDRINUSE';
+}
+
+async function listenWithFallback(server, preferredPort) {
+
+  let port = preferredPort;
+
+  for (let attempt = 0; attempt <= MAX_AUTO_PORT_ATTEMPTS; attempt += 1) {
+
+    try {
+
+      await listen(
+        server,
+        port
+      );
+
+      return port;
+
+    } catch (error) {
+
+      const canTryNextPort =
+        isDefaultPort &&
+        isPortInUse(error) &&
+        attempt < MAX_AUTO_PORT_ATTEMPTS;
+
+      if (!canTryNextPort) {
+
+        error.port = port;
+        throw error;
+      }
+
+      console.warn(
+        `Port ${port} is already in use. Trying port ${port + 1}...`
+      );
+
+      port += 1;
+    }
+  }
+
+  return port;
+}
+
 function printStartupError(error) {
 
-  if (error.code === 'EADDRINUSE') {
+  if (isPortInUse(error)) {
+
+    const port = error.port || PORT;
 
     console.error(
-      `Port ${PORT} is already in use.`
+      `Port ${port} is already in use.`
     );
 
     console.error(
@@ -75,7 +125,7 @@ function printStartupError(error) {
     );
 
     console.error(
-      `To find the process on macOS/Linux, run: lsof -i :${PORT}`
+      `To find the process on macOS/Linux, run: lsof -i :${port}`
     );
 
     return;
@@ -103,14 +153,21 @@ async function start() {
 
     initSocket(server);
 
-    await listen(
+    const actualPort = await listenWithFallback(
       server,
       PORT
     );
 
     console.log(
-      `Server running on port ${PORT}`
+      `Server running on port ${actualPort}`
     );
+
+    if (actualPort !== PORT) {
+
+      console.log(
+        `Frontend API URL for this session: REACT_APP_API_URL=http://localhost:${actualPort}/api`
+      );
+    }
 
   } catch (error) {
 

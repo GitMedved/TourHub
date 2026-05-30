@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaStar, FaMapMarkerAlt, FaKey } from 'react-icons/fa';
 import api from '../services/api';
+import { getAssetUrl } from '../config/api';
 import Header from '../components/Header';
 import LoadingScreen from '../components/LoadingScreen';
 
@@ -98,7 +99,7 @@ const MapPage = () => {
               className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
               <div className="h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg mb-3 flex items-center justify-center text-white text-2xl overflow-hidden">
                 {event.previewImage ? (
-                  <img src={`http://localhost:5001${event.previewImage}`} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  <img src={getAssetUrl(event.previewImage)} alt="" className="w-full h-full object-cover" loading="lazy" />
                 ) : '🏔️'}
               </div>
               <h3 className="font-semibold line-clamp-2">{event.title}</h3>

@@ -4,6 +4,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FaStar, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaArrowLeft, FaQuestionCircle, FaHeart, FaRegHeart, FaShareAlt } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
+import { getAssetUrl } from '../config/api';
 import Header from '../components/Header';
 
 const SellerEvents = ({ sellerId, currentEventId }) => {
@@ -26,7 +27,7 @@ const SellerEvents = ({ sellerId, currentEventId }) => {
         {events.map(event => (
           <Link to={`/event/${event.id}`} key={event.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition group">
             <div className="h-32 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl">
-              {event.previewImage ? <img src={`http://localhost:5001${event.previewImage}`} alt="" className="w-full h-full object-cover" /> : '🏔️'}
+              {event.previewImage ? <img src={getAssetUrl(event.previewImage)} alt="" className="w-full h-full object-cover" /> : '🏔️'}
             </div>
             <div className="p-3"><h3 className="font-medium text-sm text-gray-800 line-clamp-2">{event.title}</h3><p className="text-xs text-gray-500 mt-1">${parseFloat(event.price).toFixed(0)} • {event.durationDays}д</p></div>
           </Link>
@@ -296,7 +297,7 @@ const EventDetailPage = () => {
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 mb-4 hover:text-gray-700 text-sm"><FaArrowLeft /> Назад</button>
         
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <img src={event.previewImage ? `http://localhost:5001${event.previewImage}` : 'https://via.placeholder.com/1200x400'} alt={event.title} className="w-full h-64 object-cover" />
+          <img src={event.previewImage ? getAssetUrl(event.previewImage) : 'https://via.placeholder.com/1200x400'} alt={event.title} className="w-full h-64 object-cover" />
           
           <div className="p-6">
             <h1 className="text-2xl font-bold mb-2">{event.title}</h1>

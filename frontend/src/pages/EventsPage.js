@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { FaSearch, FaStar, FaMapMarkerAlt, FaCalendar, FaClock, FaFilter, FaSortAmountDown, FaMountain, FaCompass, FaUmbrellaBeach } from 'react-icons/fa';
 import api from '../services/api';
+import { getAssetUrl } from '../config/api';
 import { REGIONS, SEASONS, CATEGORIES } from '../data/regions';
 import Header from '../components/Header';
 
@@ -60,7 +61,7 @@ const EventsPage = () => {
   };
 
   const getImage = (event, index) => {
-    if (event.previewImage) return `http://localhost:5001${event.previewImage}`;
+    if (event.previewImage) return getAssetUrl(event.previewImage);
     return fallbackImages[index % fallbackImages.length];
   };
 
