@@ -19,6 +19,7 @@ import {
 } from '@tanstack/react-query';
 
 import HomePage from './pages/HomePage';
+import EventsPage from './pages/EventsPage';
 import MapPage from './pages/MapPage';
 import EventDetailPage from './pages/EventDetailPage';
 import LoginPage from './pages/LoginPage';
@@ -214,6 +215,11 @@ function AppContent() {
         <Route
           path="/"
           element={<HomePage />}
+        />
+
+        <Route
+          path="/events"
+          element={<EventsPage />}
         />
 
         <Route
