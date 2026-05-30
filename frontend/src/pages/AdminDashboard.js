@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaUsers, FaCalendarAlt, FaStar, FaStore, FaTicketAlt, FaChartBar, FaTrash, FaSearch, FaShieldAlt } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
+import { getAssetUrl } from '../config/api';
 import Header from '../components/Header';
 
 const ROLE_CONFIG = {
@@ -233,7 +234,7 @@ const AdminDashboard = () => {
                     <div className="flex gap-4 flex-1 min-w-0">
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl overflow-hidden shrink-0">
                         {event.previewImage
-                          ? <img src={`http://localhost:5001${event.previewImage}`} alt="" className="w-full h-full object-cover" />
+                          ? <img src={getAssetUrl(event.previewImage)} alt="" className="w-full h-full object-cover" />
                           : <div className="w-full h-full flex items-center justify-center text-2xl">🏔️</div>}
                       </div>
                       <div className="min-w-0">

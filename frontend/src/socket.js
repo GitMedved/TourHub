@@ -1,8 +1,8 @@
 import { io } from 'socket.io-client';
+import { API_ORIGIN } from './config/api';
 
 const socket = io(
-  process.env.REACT_APP_API_ORIGIN ||
-  'http://localhost:5001',
+  API_ORIGIN,
   {
     autoConnect: false,
     reconnectionDelay: 1000,

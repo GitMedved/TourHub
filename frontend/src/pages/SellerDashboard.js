@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrash, FaChartBar, FaCalendarAlt, FaUsers, FaStar, FaCheck, FaTimes, FaEye, FaStore, FaRubleSign } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
+import { getAssetUrl } from '../config/api';
 import Header from '../components/Header';
 
 const CATEGORIES = [
@@ -274,7 +275,7 @@ const SellerDashboard = () => {
                   <div key={event.id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden group">
                     <div className="h-36 bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden relative">
                       {event.previewImage
-                        ? <img src={`http://localhost:5001${event.previewImage}`} alt="" className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                        ? <img src={getAssetUrl(event.previewImage)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
                         : <div className="w-full h-full flex items-center justify-center text-4xl">🏔️</div>}
                       <span className={`absolute top-3 right-3 text-xs px-2 py-1 rounded-full font-medium ${
                         event.moderationStatus === 'approved' ? 'bg-green-500 text-white' :

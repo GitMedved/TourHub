@@ -137,3 +137,59 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* TourHub visual refresh */
+@keyframes tourhubReveal {
+  from { opacity: 0; transform: translateY(22px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes tourhubFloat {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-16px) rotate(1deg); }
+}
+
+@keyframes tourhubAurora {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: .7; }
+  50% { transform: translate3d(24px, -18px, 0) scale(1.12); opacity: 1; }
+}
+
+@keyframes tourhubShine {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to { transform: translateX(220%) skewX(-18deg); }
+}
+
+.tourhub-reveal {
+  animation: tourhubReveal .75s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.tourhub-float {
+  animation: tourhubFloat 7s ease-in-out infinite;
+}
+
+.tourhub-aurora {
+  animation: tourhubAurora 9s ease-in-out infinite;
+}
+
+.tourhub-delay-2 {
+  animation-delay: -3s;
+}
+
+.tourhub-shine::after {
+  content: '';
+  position: absolute;
+  inset: -40% auto -40% -30%;
+  width: 28%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+  animation: tourhubShine 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tourhub-reveal,
+  .tourhub-float,
+  .tourhub-aurora,
+  .tourhub-shine::after {
+    animation: none !important;
+  }
+}
