@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fa';
 
 import Header from '../components/Header';
+import { useLanguage } from '../i18n';
 
 const activeTrips = [
   {
@@ -68,13 +69,14 @@ const discoverRoutes = [
 ];
 
 const heroStats = [
-  { value: '12k+', label: 'planned stops' },
-  { value: '4.9', label: 'traveler rating' },
-  { value: '38', label: 'countries explored' }
+  { value: '12k+', labelKey: 'plannedStops' },
+  { value: '4.9', labelKey: 'travelerRating' },
+  { value: '38', labelKey: 'countries' }
 ];
 
 const TripCard = ({
-  trip
+  trip,
+  t
 }) => (
   <div className="tourhub-reveal bg-white rounded-[2rem] p-4 shadow-lg shadow-blue-900/5 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-500 border border-white/80 hover:-translate-y-2">
     <div className="relative h-56 overflow-hidden rounded-[1.5rem]">
@@ -85,7 +87,7 @@ const TripCard = ({
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
       <div className={`absolute left-4 top-4 rounded-full bg-gradient-to-r ${trip.gradient} px-4 py-2 text-xs font-bold text-white shadow-lg`}>
-        Live planning
+        {t.home.livePlanning}
       </div>
       <div className="absolute bottom-4 left-4 right-4 text-white">
         <h3 className="text-2xl font-black">
@@ -107,14 +109,16 @@ const TripCard = ({
       </div>
     </div>
 
-    <button className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-950 py-3 font-semibold text-white transition hover:scale-[1.02] hover:bg-blue-700">
-      Open Workspace
+    <Link to="/trips" className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-950 py-3 font-semibold text-white transition hover:scale-[1.02] hover:bg-blue-700">
+      {t.home.openWorkspace}
       <FaArrowRight />
-    </button>
+    </Link>
   </div>
 );
 
 const HomePage = () => {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen overflow-hidden bg-slate-50 text-gray-950">
       <Header />
@@ -128,18 +132,18 @@ const HomePage = () => {
           <div className="tourhub-reveal max-w-4xl">
             <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm backdrop-blur">
               <FaPlaneDeparture className="text-cyan-300" />
-              Collaborative Travel Platform
+              {t.home.badge}
             </div>
 
             <h1 className="text-5xl font-black leading-tight md:text-7xl">
-              Plan trips
+              {t.home.title}
               <span className="block bg-gradient-to-r from-cyan-200 via-white to-orange-200 bg-clip-text text-transparent">
-                that feel cinematic.
+                {t.home.titleAccent}
               </span>
             </h1>
 
             <p className="mt-8 max-w-2xl text-xl leading-8 text-slate-300">
-              Create collaborative travel workspaces, invite friends, vote on places, build visual routes, and turn every idea into a shared adventure.
+              {t.home.subtitle}
             </p>
 
             <div className="mt-10 flex flex-wrap gap-4">
@@ -147,22 +151,22 @@ const HomePage = () => {
                 to="/trips"
                 className="rounded-2xl bg-white px-8 py-4 font-bold text-gray-950 shadow-2xl shadow-white/10 transition hover:-translate-y-1 hover:scale-[1.02]"
               >
-                Create Trip
+                {t.home.createTrip}
               </Link>
 
               <Link
                 to="/events"
                 className="rounded-2xl border border-white/20 bg-white/10 px-8 py-4 font-bold backdrop-blur transition hover:-translate-y-1 hover:bg-white/20"
               >
-                Explore Community
+                {t.home.explore}
               </Link>
             </div>
 
             <div className="mt-12 grid max-w-xl grid-cols-3 gap-3">
               {heroStats.map((stat) => (
-                <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+                <div key={t.home[stat.labelKey]} className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
                   <div className="text-2xl font-black">{stat.value}</div>
-                  <div className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-300">{stat.label}</div>
+                  <div className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-300">{t.home[stat.labelKey]}</div>
                 </div>
               ))}
             </div>
@@ -178,13 +182,13 @@ const HomePage = () => {
               <div className="absolute inset-4 rounded-[2rem] bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <div className="absolute bottom-10 left-10 right-10 rounded-3xl border border-white/20 bg-white/15 p-5 backdrop-blur-xl">
                 <div className="flex items-center gap-2 text-sm font-semibold text-cyan-100">
-                  <FaCompass /> Route preview
+                  <FaCompass /> {t.home.routePreview}
                 </div>
-                <div className="mt-3 text-2xl font-black">Dolomites sunrise loop</div>
+                <div className="mt-3 text-2xl font-black">{t.home.routeTitle}</div>
                 <div className="mt-4 flex items-center gap-3 text-sm text-white/80">
-                  <span className="rounded-full bg-white/15 px-3 py-1">5 stops</span>
-                  <span className="rounded-full bg-white/15 px-3 py-1">8 friends</span>
-                  <span className="rounded-full bg-white/15 px-3 py-1">92% voted</span>
+                  <span className="rounded-full bg-white/15 px-3 py-1">{t.home.stops}</span>
+                  <span className="rounded-full bg-white/15 px-3 py-1">{t.home.friends}</span>
+                  <span className="rounded-full bg-white/15 px-3 py-1">{t.home.voted}</span>
                 </div>
               </div>
             </div>
@@ -205,24 +209,24 @@ const HomePage = () => {
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm font-bold text-blue-700">
-                <FaRoute /> Workspaces
+                <FaRoute /> {t.home.workspaces}
               </div>
               <h2 className="text-4xl font-black">
-                Active Trips
+                {t.home.activeTrips}
               </h2>
               <p className="mt-2 text-gray-500">
-                Shared planning spaces with beautiful visual context
+                {t.home.activeTripsText}
               </p>
             </div>
 
             <Link to="/trips" className="hidden font-bold text-blue-600 transition hover:text-purple-600 sm:block">
-              View all
+              {t.home.viewAll}
             </Link>
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {activeTrips.map((trip) => (
-              <TripCard key={trip.id} trip={trip} />
+              <TripCard key={trip.id} trip={trip} t={t} />
             ))}
           </div>
         </section>
@@ -234,7 +238,7 @@ const HomePage = () => {
                 <FaUsers className="text-2xl" />
               </div>
               <h2 className="text-3xl font-black">
-                Community Activity
+                {t.home.communityActivity}
               </h2>
             </div>
 
@@ -258,7 +262,7 @@ const HomePage = () => {
                 <FaGlobeEurope className="text-2xl" />
               </div>
               <h2 className="text-3xl font-black">
-                Discover Routes
+                {t.home.discoverRoutes}
               </h2>
             </div>
 
@@ -272,11 +276,11 @@ const HomePage = () => {
                         {route.title}
                       </h3>
                       <p className="mt-1 text-sm text-gray-500">
-                        by {route.author}
+                        {t.home.by} {route.author}
                       </p>
                     </div>
                     <div className="rounded-full bg-rose-50 px-3 py-1 text-sm font-bold text-rose-600">
-                      {route.saves} saves
+                      {route.saves} {t.home.saves}
                     </div>
                   </div>
                 </div>
@@ -290,18 +294,18 @@ const HomePage = () => {
           <div className="relative flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-bold">
-                <FaMapMarkedAlt /> Your next adventure
+                <FaMapMarkedAlt /> {t.home.nextAdventure}
               </div>
               <h2 className="text-4xl font-black">
-                Start planning together
+                {t.home.startTogether}
               </h2>
               <p className="mt-4 max-w-2xl text-white/80">
-                Build collaborative travel spaces, organize routes, share ideas, and travel smarter as a group.
+                {t.home.startText}
               </p>
             </div>
 
             <Link to="/trips" className="whitespace-nowrap rounded-2xl bg-white px-8 py-4 font-black text-gray-950 transition hover:-translate-y-1 hover:scale-[1.02]">
-              Create Workspace
+              {t.home.createWorkspace}
             </Link>
           </div>
         </section>

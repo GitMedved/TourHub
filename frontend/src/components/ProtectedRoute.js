@@ -13,9 +13,9 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
     // Если роль не подходит, редиректим на соответствующую страницу
-    if (user.role === 'user') return <Navigate to="/" replace />;
-    if (user.role === 'seller') return <Navigate to="/seller-dashboard" replace />;
-    if (['manager', 'admin'].includes(user.role)) return <Navigate to="/manager-dashboard" replace />;
+    if (user.role === 'USER') return <Navigate to="/" replace />;
+    if (user.role === 'SELLER') return <Navigate to="/seller" replace />;
+    if (['MANAGER', 'ADMIN'].includes(user.role)) return <Navigate to={user.role === 'ADMIN' ? '/admin' : '/manager'} replace />;
     return <Navigate to="/login" replace />;
   }
   

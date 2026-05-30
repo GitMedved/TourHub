@@ -16,11 +16,9 @@ const ChatPage = () => {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    if (bookingId) {
-      loadMessages();
-      const interval = setInterval(loadMessages, 5000);
-      return () => clearInterval(interval);
-    }
+    loadMessages();
+    const interval = setInterval(loadMessages, 5000);
+    return () => clearInterval(interval);
   }, [bookingId]);
 
   useEffect(() => {
@@ -29,10 +27,17 @@ const ChatPage = () => {
 
   const loadMessages = async () => {
     try {
+      if (!bookingId) {
+        const res = await api.get(`/messages/chat/${user.id}`);
+        setMessages(Array.isArray(res.data) ? res.data : []);
+        setBooking(null);
+        return;
+      }
+
       // Пробуем получить сообщения через API бронирования
       const res = await api.get(`/messages/booking/${bookingId}`);
       if (res.data) {
-        setMessages(res.data.messages || []);
+        setMessages(Array.isArray(res.data) ? res.data : (res.data.messages || []));
         setBooking(res.data.booking || null);
       }
     } catch (e) {
@@ -56,15 +61,18 @@ const ChatPage = () => {
     if (!newMessage.trim()) return;
 
     try {
-      // Пробуем отправить через API бронирования
-      await api.post(`/messages/booking/${bookingId}`, { text: newMessage });
+      if (bookingId) {
+        await api.post(`/messages/booking/${bookingId}`, { text: newMessage });
+      } else {
+        await api.post('/messages/to-manager', { message: newMessage });
+      }
       setNewMessage('');
       loadMessages();
     } catch (e) {
       try {
         // Запасной вариант - отправить менеджеру
         await api.post('/messages/to-manager', { 
-          message: `[Бронирование #${bookingId}] ${newMessage}` 
+          message: bookingId ? `[Бронирование #${bookingId}] ${newMessage}` : newMessage
         });
         setNewMessage('');
         
@@ -102,7 +110,7 @@ const ChatPage = () => {
             </button>
             <div>
               <h2 className="font-semibold">
-                {booking ? `Чат: ${booking.eventTitle || 'Бронирование'}` : `Чат #${bookingId}`}
+                {booking ? `Чат: ${booking.eventTitle || 'Бронирование'}` : (bookingId ? `Чат #${bookingId}` : 'Чат с поддержкой')}
               </h2>
               <p className="text-sm text-gray-500">
                 {booking?.status === 'CONFIRMED' ? 'Подтверждено' : 'В обработке'}
@@ -116,7 +124,7 @@ const ChatPage = () => {
               <div className="text-center py-16 text-gray-400">
                 <div className="text-5xl mb-4">💬</div>
                 <p className="text-lg font-medium text-gray-600">Начните общение</p>
-                <p className="text-sm">Напишите сообщение по бронированию</p>
+                <p className="text-sm">Напишите сообщение по бронированию или менеджеру</p>
               </div>
             ) : (
               <div className="space-y-4">

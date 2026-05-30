@@ -5,40 +5,43 @@ import {
 } from 'react-router-dom';
 
 import {
-  FaHome,
   FaMapMarkedAlt,
   FaUser,
   FaUsers,
   FaCompass
 } from 'react-icons/fa';
 
+import { useLanguage } from '../i18n';
+
 const navItems = [
   {
     to: '/',
     icon: FaCompass,
-    label: 'Discover'
+    labelKey: 'discover'
   },
 
   {
     to: '/trips',
     icon: FaUsers,
-    label: 'Trips'
+    labelKey: 'trips'
   },
 
   {
     to: '/map',
     icon: FaMapMarkedAlt,
-    label: 'Map'
+    labelKey: 'map'
   },
 
   {
     to: '/profile',
     icon: FaUser,
-    label: 'Profile'
+    labelKey: 'profile'
   }
 ];
 
 function Sidebar() {
+
+  const { t } = useLanguage();
 
   const user = (() => {
     try {
@@ -121,7 +124,7 @@ function Sidebar() {
                 whitespace-nowrap
                 pointer-events-none
               ">
-                {item.label}
+                {t.sidebar[item.labelKey]}
               </span>
 
             </NavLink>

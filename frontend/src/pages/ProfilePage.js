@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaCalendarAlt, FaHeadset, FaStar, FaCalendarCheck, FaTimes, FaTicketAlt, FaRubleSign } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import { FaCalendarAlt, FaHeadset, FaStar, FaCalendarCheck, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import Header from '../components/Header';
+import { useLanguage } from '../i18n';
 
 const CANCEL_REASONS = [
   'Планы изменились', 'Нашёл более выгодное предложение', 'Не подходит дата',
@@ -49,10 +50,10 @@ const ProfilePage = () => {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [cancelModal, setCancelModal] = useState({ open: false, id: null, reason: '' });
   const [reviewModal, setReviewModal] = useState({ open: false, id: null, eventRating: 5, sellerRating: 5, comment: '' });
-  const navigate = useNavigate();
+  const { language, t } = useLanguage();
 
   useEffect(() => {
-    try { setUser(JSON.parse(localStorage.getItem('user'))); } catch {}
+    try { setUser(JSON.parse(localStorage.getItem('user'))); } catch { setUser(null); }
     loadBookings();
   }, []);
 
@@ -128,23 +129,23 @@ const ProfilePage = () => {
               <div>
                 <h2 className="text-xl font-bold">{user?.firstName} {user?.lastName}</h2>
                 <p className="text-gray-500 text-sm">{user?.email}</p>
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">Путешественник</span>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">{t.profile.traveler}</span>
               </div>
             </div>
             <button
               onClick={() => setShowMessageModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-full text-sm font-medium hover:bg-blue-100 transition"
             >
-              <FaHeadset /> Написать менеджеру
+              <FaHeadset /> {t.profile.messageManager}
             </button>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[
-            { label: 'Всего', value: bookings.length, icon: '🎫' },
-            { label: 'Активных', value: bookings.filter(b => ['CREATED','CONFIRMED'].includes(b.status)).length, icon: '⏳' },
-            { label: 'Завершено', value: bookings.filter(b => b.status === 'COMPLETED').length, icon: '✅' },
+            { label: t.profile.total, value: bookings.length, icon: '🎫' },
+            { label: t.profile.active, value: bookings.filter(b => ['CREATED','CONFIRMED'].includes(b.status)).length, icon: '⏳' },
+            { label: t.profile.completed, value: bookings.filter(b => b.status === 'COMPLETED').length, icon: '✅' },
           ].map((s, i) => (
             <div key={i} className="bg-white rounded-2xl shadow-sm p-4 text-center">
               <div className="text-2xl mb-1">{s.icon}</div>
@@ -157,15 +158,15 @@ const ProfilePage = () => {
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b flex items-center gap-2">
             <FaCalendarAlt className="text-blue-500" />
-            <h3 className="font-bold">Мои бронирования</h3>
+            <h3 className="font-bold">{t.profile.bookings}</h3>
             <span className="ml-auto text-sm text-gray-400">{bookings.length}</span>
           </div>
 
           {bookings.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-5xl mb-4">🗺️</div>
-              <p className="text-gray-500 mb-2">У вас пока нет бронирований</p>
-              <Link to="/" className="text-blue-600 text-sm hover:underline">Найти тур</Link>
+              <p className="text-gray-500 mb-2">{t.profile.noBookings}</p>
+              <Link to="/events" className="text-blue-600 text-sm hover:underline">{t.profile.findTour}</Link>
             </div>
           ) : (
             <div className="divide-y divide-gray-50">
@@ -185,23 +186,31 @@ const ProfilePage = () => {
                           {b.event?.title || b.Event?.title || `Бронирование #${b.id}`}
                         </h4>
                         <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-500">
-                          <span>📅 {new Date(b.eventDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                          <span>👥 {b.participants} чел.</span>
+                          <span>📅 {new Date(b.eventDate).toLocaleDateString(language === 'en' ? 'en-US' : 'ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                          <span>👥 {b.participants} {t.profile.people}</span>
                           <span className="font-semibold text-blue-600">
                             {parseFloat(b.totalPrice || 0).toLocaleString('ru-RU')} ₽
                           </span>
                         </div>
                         {b.cancellationReason && (
-                          <p className="text-xs text-red-500 mt-1">Причина: {b.cancellationReason}</p>
+                          <p className="text-xs text-red-500 mt-1">{t.profile.reason}: {b.cancellationReason}</p>
                         )}
                       </div>
                       <div className="flex flex-col gap-2 shrink-0">
+                        {b.id && (
+                          <Link
+                            to={`/chat/${b.id}`}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-full text-xs font-medium hover:bg-blue-100 transition"
+                          >
+                            💬 {t.nav.support}
+                          </Link>
+                        )}
                         {b.status === 'CREATED' && (
                           <button
                             onClick={() => setCancelModal({ open: true, id: b.id, reason: '' })}
                             className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-medium hover:bg-red-100 transition"
                           >
-                            <FaTimes /> Отменить
+                            <FaTimes /> {t.profile.cancel}
                           </button>
                         )}
                         {b.status === 'CONFIRMED' && (
@@ -209,7 +218,7 @@ const ProfilePage = () => {
                             onClick={() => completeBooking(b.id)}
                             className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-medium hover:bg-green-100 transition"
                           >
-                            <FaCalendarCheck /> Завершить
+                            <FaCalendarCheck /> {t.profile.complete}
                           </button>
                         )}
                         {b.status === 'COMPLETED' && (
@@ -217,7 +226,7 @@ const ProfilePage = () => {
                             onClick={() => setReviewModal({ open: true, id: b.id, eventRating: 5, sellerRating: 5, comment: '' })}
                             className="flex items-center gap-1 px-3 py-1.5 bg-yellow-50 text-yellow-600 border border-yellow-200 rounded-full text-xs font-medium hover:bg-yellow-100 transition"
                           >
-                            <FaStar /> Отзыв
+                            <FaStar /> {t.profile.review}
                           </button>
                         )}
                       </div>
@@ -231,54 +240,54 @@ const ProfilePage = () => {
       </div>
 
       {cancelModal.open && (
-        <Modal title="Причина отмены" onClose={() => setCancelModal({ open: false, id: null, reason: '' })}>
+        <Modal title={t.profile.cancellationReason} onClose={() => setCancelModal({ open: false, id: null, reason: '' })}>
           <select
             value={cancelModal.reason}
             onChange={e => setCancelModal(p => ({ ...p, reason: e.target.value }))}
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Выберите причину</option>
+            <option value="">{t.profile.chooseReason}</option>
             {CANCEL_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
           <div className="flex gap-2">
             <button onClick={cancelBooking} disabled={!cancelModal.reason}
               className="flex-1 bg-red-500 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-red-600 transition disabled:opacity-50">
-              Подтвердить отмену
+              {t.profile.confirmCancel}
             </button>
             <button onClick={() => setCancelModal({ open: false, id: null, reason: '' })}
               className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">
-              Назад
+              {t.profile.back}
             </button>
           </div>
         </Modal>
       )}
 
       {reviewModal.open && (
-        <Modal title="Оставить отзыв" onClose={() => setReviewModal({ open: false, id: null, eventRating: 5, sellerRating: 5, comment: '' })}>
+        <Modal title={t.profile.leaveReview} onClose={() => setReviewModal({ open: false, id: null, eventRating: 5, sellerRating: 5, comment: '' })}>
           <div className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Оценка события</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">{t.profile.eventRating}</p>
               <StarRating value={reviewModal.eventRating} onChange={v => setReviewModal(p => ({ ...p, eventRating: v }))} />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Оценка продавца</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">{t.profile.sellerRating}</p>
               <StarRating value={reviewModal.sellerRating} onChange={v => setReviewModal(p => ({ ...p, sellerRating: v }))} />
             </div>
             <textarea
               value={reviewModal.comment}
               onChange={e => setReviewModal(p => ({ ...p, comment: e.target.value }))}
               rows="4"
-              placeholder="Поделитесь впечатлениями..."
+              placeholder={t.profile.reviewPlaceholder}
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
             <div className="flex gap-2">
               <button onClick={submitReview}
                 className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition">
-                Отправить отзыв
+                {t.profile.sendReview}
               </button>
               <button onClick={() => setReviewModal({ open: false, id: null, eventRating: 5, sellerRating: 5, comment: '' })}
                 className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">
-                Отмена
+                {t.profile.cancel}
               </button>
             </div>
           </div>
@@ -286,22 +295,22 @@ const ProfilePage = () => {
       )}
 
       {showMessageModal && (
-        <Modal title="Написать менеджеру" onClose={() => setShowMessageModal(false)}>
+        <Modal title={t.profile.writeManager} onClose={() => setShowMessageModal(false)}>
           <textarea
             value={messageText}
             onChange={e => setMessageText(e.target.value)}
             rows="5"
-            placeholder="Опишите ваш вопрос или проблему..."
+            placeholder={t.profile.messagePlaceholder}
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
           />
           <div className="flex gap-2">
             <button onClick={sendMessage}
               className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
-              Отправить
+              {t.profile.send}
             </button>
             <button onClick={() => setShowMessageModal(false)}
               className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">
-              Отмена
+              {t.profile.cancel}
             </button>
           </div>
         </Modal>

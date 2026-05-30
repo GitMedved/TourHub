@@ -7,7 +7,12 @@ const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const messageRoutes = require('./routes/messageRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const sellerRoutes = require('./routes/sellerRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const wishlistRoutes = require('./routes/wishlistRoutes');
 
 const tripRoutes = require('./modules/trips/trip.routes');
 
@@ -108,6 +113,31 @@ app.use(
 app.use(
   '/api/admin',
   adminRoutes
+);
+
+app.use(
+  '/api/bookings',
+  bookingRoutes
+);
+
+app.use(
+  '/api/messages',
+  messageRoutes
+);
+
+app.use(
+  '/api/reviews',
+  reviewRoutes
+);
+
+app.use(
+  '/api/sellers',
+  sellerRoutes
+);
+
+app.use(
+  '/api/wishlist',
+  wishlistRoutes
 );
 
 app.get('/api/health', (req, res) => {

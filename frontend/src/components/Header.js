@@ -2,22 +2,24 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaMapMarkerAlt, FaSignOutAlt, FaStore, FaUserTie, FaCrown, FaUser, FaChevronDown } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { useLanguage } from '../i18n';
 
 const ROLE_CONFIG = {
-  ADMIN:   { path: '/admin',   label: 'Админ панель',      icon: <FaCrown />,   color: 'from-red-500 to-pink-500' },
-  SELLER:  { path: '/seller',  label: 'Кабинет продавца',  icon: <FaStore />,   color: 'from-purple-500 to-indigo-500' },
-  MANAGER: { path: '/manager', label: 'Панель управления', icon: <FaUserTie />, color: 'from-teal-500 to-green-500' },
-  USER:    { path: '/profile', label: 'Профиль',           icon: <FaUser />,    color: 'from-blue-500 to-purple-500' },
+  ADMIN:   { path: '/admin', labelKey: 'admin', icon: <FaCrown />, color: 'from-red-500 to-pink-500' },
+  SELLER:  { path: '/seller', labelKey: 'seller', icon: <FaStore />, color: 'from-purple-500 to-indigo-500' },
+  MANAGER: { path: '/manager', labelKey: 'manager', icon: <FaUserTie />, color: 'from-teal-500 to-green-500' },
+  USER:    { path: '/profile', labelKey: 'profile', icon: <FaUser />, color: 'from-blue-500 to-purple-500' },
 };
 
 const NAV_LINKS = [
-  { path: '/',      label: 'Главная' },
-  { path: '/events', label: 'Все туры' },
-  { path: '/map',   label: 'Карта' },
+  { path: '/', labelKey: 'home' },
+  { path: '/events', labelKey: 'events' },
+  { path: '/map', labelKey: 'map' },
 ];
 
 const Header = () => {
   const [user, setUser] = useState(null);
+  const { language, setLanguage, t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -46,7 +48,7 @@ const Header = () => {
     localStorage.removeItem('user');
     window.dispatchEvent(new Event('storage'));
     setMenuOpen(false);
-    toast.success('Вы вышли из системы');
+    toast.success(t.toast.logout);
     navigate('/');
   };
 
@@ -77,12 +79,27 @@ const Header = () => {
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
               }`}
             >
-              {link.label}
+              {t.nav[link.labelKey]}
             </Link>
           ))}
         </nav>
 
         <div className="flex items-center gap-2">
+          <div className="flex items-center rounded-full bg-gray-100 p-1 text-xs font-bold" aria-label={t.nav.lang}>
+            {['ru', 'en'].map(code => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLanguage(code)}
+                className={`rounded-full px-3 py-1 transition ${
+                  language === code ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-800'
+                }`}
+              >
+                {code.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
           {user ? (
             <div className="relative" ref={menuRef}>
               <button
@@ -112,7 +129,7 @@ const Header = () => {
                       className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-gray-700 text-sm transition"
                     >
                       <span className="text-blue-500">{roleConfig.icon}</span>
-                      {roleConfig.label}
+                      {t.nav[roleConfig.labelKey]}
                     </Link>
                   )}
 
@@ -122,7 +139,7 @@ const Header = () => {
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-gray-700 text-sm transition"
                     >
-                      <span>💬</span> Чат с поддержкой
+                      <span>💬</span> {t.nav.support}
                     </Link>
                   )}
 
@@ -131,7 +148,7 @@ const Header = () => {
                       onClick={handleLogout}
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-500 text-sm transition"
                     >
-                      <FaSignOutAlt /> Выйти
+                      <FaSignOutAlt /> {t.nav.logout}
                     </button>
                   </div>
                 </div>
@@ -143,13 +160,13 @@ const Header = () => {
                 to="/login"
                 className="text-sm text-gray-600 hover:text-blue-600 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition"
               >
-                Войти
+                {t.nav.login}
               </Link>
               <Link
                 to="/register"
                 className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1.5 rounded-full text-sm font-medium hover:opacity-90 transition shadow-sm"
               >
-                Регистрация
+                {t.nav.register}
               </Link>
             </>
           )}

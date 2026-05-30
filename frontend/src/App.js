@@ -8,6 +8,7 @@ import {
   Routes,
   Route,
   Navigate,
+  Link,
   useLocation
 } from 'react-router-dom';
 
@@ -26,9 +27,15 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/AdminDashboard';
+import SellerDashboard from './pages/SellerDashboard';
+import ManagerDashboard from './pages/ManagerDashboard';
+import SellerProfilePage from './pages/SellerProfilePage';
+import ChatPage from './pages/ChatPage';
+import CreateEventPage from './pages/CreateEventPage';
 
 import Sidebar from './components/Sidebar';
 import ErrorBoundary from './components/ErrorBoundary';
+import { LanguageProvider, useLanguage } from './i18n';
 
 import TripsPage from './features/trips/TripsPage';
 import TripWorkspacePage from './features/trips/TripWorkspacePage';
@@ -92,51 +99,55 @@ const ProtectedRoute = ({
   return children;
 };
 
-const NotFound = () => (
-  <div className="
-    min-h-screen
-    flex
-    items-center
-    justify-center
-    bg-gray-50
-  ">
+const NotFound = () => {
+  const { t } = useLanguage();
 
-    <div className="text-center">
+  return (
+    <div className="
+      min-h-screen
+      flex
+      items-center
+      justify-center
+      bg-gray-50
+    ">
 
-      <div className="text-8xl mb-4">
-        🧭
+      <div className="text-center">
+
+        <div className="text-8xl mb-4">
+          🧭
+        </div>
+
+        <h1 className="
+          text-3xl
+          font-bold
+          text-gray-900
+          mb-3
+        ">
+          {t.common.notFoundTitle}
+        </h1>
+
+        <p className="text-gray-500 mb-6">
+          {t.common.notFoundText}
+        </p>
+
+        <Link
+          to="/"
+          className="
+            bg-black
+            text-white
+            px-6
+            py-3
+            rounded-2xl
+          "
+        >
+          {t.common.backHome}
+        </Link>
+
       </div>
 
-      <h1 className="
-        text-3xl
-        font-bold
-        text-gray-900
-        mb-3
-      ">
-        Page not found
-      </h1>
-
-      <p className="text-gray-500 mb-6">
-        This route does not exist
-      </p>
-
-      <a
-        href="/"
-        className="
-          bg-black
-          text-white
-          px-6
-          py-3
-          rounded-2xl
-        "
-      >
-        Back home
-      </a>
-
     </div>
-
-  </div>
-);
+  );
+};
 
 function AppContent() {
 
@@ -252,6 +263,56 @@ function AppContent() {
         />
 
         <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/chat/:bookingId"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/seller"
+          element={
+            <ProtectedRoute roles={['SELLER', 'ADMIN']}>
+              <SellerDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/seller/:id"
+          element={<SellerProfilePage />}
+        />
+
+        <Route
+          path="/manager"
+          element={
+            <ProtectedRoute roles={['MANAGER', 'ADMIN']}>
+              <ManagerDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/create-event"
+          element={
+            <ProtectedRoute roles={['SELLER', 'ADMIN']}>
+              <CreateEventPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/trips"
           element={
             <ProtectedRoute>
@@ -305,7 +366,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
 
-      <Router>
+      <LanguageProvider>
+
+        <Router>
 
         <Toaster
           position="bottom-right"
@@ -325,7 +388,9 @@ function App() {
           <AppContent />
         </ErrorBoundary>
 
-      </Router>
+        </Router>
+
+      </LanguageProvider>
 
     </QueryClientProvider>
   );

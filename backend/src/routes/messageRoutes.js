@@ -5,6 +5,7 @@ const { Op } = require('sequelize');
 const Message = require('../models/Message');
 const User = require('../models/User');
 const Event = require('../models/Event');
+const Seller = require('../models/Seller');
 const sequelize = require('../config/database');
 
 // ========== ЧАТ С МЕНЕДЖЕРОМ ==========
@@ -162,8 +163,6 @@ router.get('/seller/messages', authMiddleware, async (req, res) => {
   }
 });
 
-module.exports = router;
-
 // ========== ЧАТ ПО БРОНИРОВАНИЮ (юзер-селлер) ==========
 
 // Получить сообщения по бронированию
@@ -177,8 +176,9 @@ router.get('/booking/:bookingId', authMiddleware, async (req, res) => {
     }
     
     // Проверяем доступ
+    const sellerProfile = await Seller.findOne({ where: { userId: req.user.id } });
     const isUser = booking.userId === req.user.id;
-    const isSeller = booking.sellerId === req.user.id;
+    const isSeller = sellerProfile?.id === booking.sellerId;
     const isManager = ['MANAGER', 'ADMIN'].includes(req.user.role);
     
     if (!isUser && !isSeller && !isManager) {
@@ -221,8 +221,10 @@ router.post('/booking/:bookingId', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Бронирование не найдено' });
     }
     
+    const sellerProfile = await Seller.findOne({ where: { userId: req.user.id } });
+    const bookingSeller = await Seller.findByPk(booking.sellerId);
     const isUser = booking.userId === req.user.id;
-    const isSeller = booking.sellerId === req.user.id;
+    const isSeller = sellerProfile?.id === booking.sellerId;
     
     if (!isUser && !isSeller) {
       return res.status(403).json({ error: 'Нет доступа' });
@@ -239,7 +241,7 @@ router.post('/booking/:bookingId', authMiddleware, async (req, res) => {
       fromUserId: req.user.id,
       fromUserName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.email,
       fromUserRole: req.user.role,
-      toUserId: isUser ? booking.sellerId : booking.userId,
+      toUserId: isUser ? bookingSeller?.userId : booking.userId,
       toUserName: isUser ? 'Продавец' : 'Покупатель',
       message: message.trim(),
       conversationId
@@ -251,3 +253,5 @@ router.post('/booking/:bookingId', authMiddleware, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+module.exports = router;
