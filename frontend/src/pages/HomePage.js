@@ -1,4 +1,5 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import {
   Link
@@ -16,101 +17,69 @@ import {
   FaCompass
 } from 'react-icons/fa';
 
-import Header from '../components/Header';
 import { useLanguage } from '../i18n';
+import api from '../services/api';
 
-const activeTrips = [
-  {
-    id: 1,
-    title: 'Japan Spring Journey',
-    destination: 'Tokyo • Kyoto • Osaka',
-    members: 4,
-    activity: '2 new places added',
-    image: 'https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=900&q=80',
-    gradient: 'from-rose-500 to-orange-400'
-  },
-  {
-    id: 2,
-    title: 'Iceland Roadtrip',
-    destination: 'Reykjavik • Vik • Hofn',
-    members: 3,
-    activity: 'Route voting in progress',
-    image: 'https://images.unsplash.com/photo-1504829857797-ddff29c27927?auto=format&fit=crop&w=900&q=80',
-    gradient: 'from-cyan-500 to-blue-600'
+const fallbackImages = [
+  'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=900&q=80'
+];
+
+const gradients = [
+  'from-rose-500 to-orange-400',
+  'from-cyan-500 to-blue-600',
+  'from-purple-500 to-indigo-600'
+];
+
+const getEventImage = (event, index = 0) => {
+  if (event?.previewImage) {
+    return event.previewImage.startsWith('http')
+      ? event.previewImage
+      : `http://localhost:5001${event.previewImage}`;
   }
-];
 
-const communityFeed = [
-  'Anna added Kyoto Food Walk',
-  'Mike voted for Lisbon route',
-  'Sophie created a new Italy trip',
-  'Daniel invited 2 collaborators'
-];
-
-const discoverRoutes = [
-  {
-    title: 'Hidden Gems of Portugal',
-    author: 'Community',
-    saves: 124,
-    image: 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    title: 'Nordic Remote Work Journey',
-    author: 'Travel Collective',
-    saves: 87,
-    image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    title: 'Bali Wellness Route',
-    author: 'Explorer Group',
-    saves: 203,
-    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80'
-  }
-];
-
-const heroStats = [
-  { value: '12k+', labelKey: 'plannedStops' },
-  { value: '4.9', labelKey: 'travelerRating' },
-  { value: '38', labelKey: 'countries' }
-];
+  return fallbackImages[index % fallbackImages.length];
+};
 
 const TripCard = ({
-  trip,
+  event,
+  index,
   t
 }) => (
   <div className="tourhub-reveal bg-white rounded-[2rem] p-4 shadow-lg shadow-blue-900/5 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-500 border border-white/80 hover:-translate-y-2">
     <div className="relative h-56 overflow-hidden rounded-[1.5rem]">
       <img
-        src={trip.image}
-        alt={trip.title}
+        src={getEventImage(event, index)}
+        alt={event.title}
         className="h-full w-full object-cover transition duration-700 hover:scale-110"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-      <div className={`absolute left-4 top-4 rounded-full bg-gradient-to-r ${trip.gradient} px-4 py-2 text-xs font-bold text-white shadow-lg`}>
+      <div className={`absolute left-4 top-4 rounded-full bg-gradient-to-r ${gradients[index % gradients.length]} px-4 py-2 text-xs font-bold text-white shadow-lg`}>
         {t.home.livePlanning}
       </div>
       <div className="absolute bottom-4 left-4 right-4 text-white">
         <h3 className="text-2xl font-black">
-          {trip.title}
+          {event.title}
         </h3>
         <p className="mt-1 text-sm text-white/80">
-          {trip.destination}
+          {event.address || event.region || event.city || t.home.locationPending}
         </p>
       </div>
     </div>
 
     <div className="mt-5 flex items-center justify-between gap-4">
       <div className="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
-        {trip.members} members
+        {event.maxParticipants || 0} {t.home.participants}
       </div>
       <div className="flex flex-1 items-center justify-end gap-2 text-sm text-gray-500">
         <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-        {trip.activity}
+        {event.startDate ? new Date(event.startDate).toLocaleDateString('ru-RU') : t.home.datePending}
       </div>
     </div>
 
-    <Link to="/trips" className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-950 py-3 font-semibold text-white transition hover:scale-[1.02] hover:bg-blue-700">
-      {t.home.openWorkspace}
+    <Link to={`/event/${event.id}`} className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-950 py-3 font-semibold text-white transition hover:scale-[1.02] hover:bg-blue-700">
+      {t.home.openTour}
       <FaArrowRight />
     </Link>
   </div>
@@ -118,10 +87,28 @@ const TripCard = ({
 
 const HomePage = () => {
   const { t } = useLanguage();
+  const { data: eventsResponse } = useQuery({
+    queryKey: ['home-events'],
+    queryFn: async () => {
+      const response = await api.get('/events');
+      return response.data.content || response.data || [];
+    }
+  });
+
+  const events = eventsResponse || [];
+  const featuredEvents = events.slice(0, 2);
+  const latestActivity = events.slice(0, 4);
+  const popularEvents = [...events]
+    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0) || Number(b.reviewCount || 0) - Number(a.reviewCount || 0))
+    .slice(0, 3);
+  const heroStats = [
+    { value: `${events.length}`, labelKey: 'actualTours' },
+    { value: events.length ? Math.max(...events.map(event => Number(event.rating || 0))).toFixed(1) : '0.0', labelKey: 'bestRating' },
+    { value: new Set(events.map(event => event.region).filter(Boolean)).size.toString(), labelKey: 'regions' }
+  ];
 
   return (
     <div className="min-h-screen overflow-hidden bg-slate-50 text-gray-950">
-      <Header />
 
       <section className="relative overflow-hidden bg-[#08111f] text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#38bdf8,transparent_28%),radial-gradient(circle_at_75%_20%,#a855f7,transparent_28%),radial-gradient(circle_at_bottom_right,#f97316,transparent_30%)] opacity-40" />
@@ -193,12 +180,12 @@ const HomePage = () => {
               </div>
             </div>
             <div className="absolute -left-8 top-16 rounded-3xl bg-white p-4 text-gray-950 shadow-2xl">
-              <div className="flex items-center gap-2 text-sm font-bold"><FaStar className="text-yellow-400" /> Top rated</div>
-              <div className="mt-1 text-xs text-gray-500">Mountain escapes</div>
+              <div className="flex items-center gap-2 text-sm font-bold"><FaStar className="text-yellow-400" /> {t.home.bestRating}</div>
+              <div className="mt-1 text-xs text-gray-500">{heroStats[1].value}</div>
             </div>
             <div className="absolute -right-6 bottom-24 rounded-3xl bg-white p-4 text-gray-950 shadow-2xl">
-              <div className="flex items-center gap-2 text-sm font-bold"><FaHeart className="text-rose-500" /> 248 saves</div>
-              <div className="mt-1 text-xs text-gray-500">Community route</div>
+              <div className="flex items-center gap-2 text-sm font-bold"><FaHeart className="text-rose-500" /> {events.length}</div>
+              <div className="mt-1 text-xs text-gray-500">{t.home.actualTours}</div>
             </div>
           </div>
         </div>
@@ -225,9 +212,15 @@ const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {activeTrips.map((trip) => (
-              <TripCard key={trip.id} trip={trip} t={t} />
-            ))}
+            {featuredEvents.length > 0 ? (
+              featuredEvents.map((event, index) => (
+                <TripCard key={event.id} event={event} index={index} t={t} />
+              ))
+            ) : (
+              <div className="col-span-full rounded-[2rem] bg-white p-8 text-center text-gray-500 shadow-sm">
+                {t.home.noActualTours}
+              </div>
+            )}
           </div>
         </section>
 
@@ -243,16 +236,18 @@ const HomePage = () => {
             </div>
 
             <div className="space-y-4">
-              {communityFeed.map((item, index) => (
-                <div key={item} className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-gray-50 to-white p-4 shadow-sm transition hover:translate-x-2 hover:shadow-md">
+              {latestActivity.length > 0 ? latestActivity.map((event, index) => (
+                <Link to={`/event/${event.id}`} key={event.id} className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-gray-50 to-white p-4 shadow-sm transition hover:translate-x-2 hover:shadow-md">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                     {index + 1}
                   </div>
                   <span className="text-gray-700">
-                    {item}
+                    {event.title}
                   </span>
-                </div>
-              ))}
+                </Link>
+              )) : (
+                <div className="rounded-2xl bg-gray-50 p-4 text-gray-500">{t.home.noActivity}</div>
+              )}
             </div>
           </div>
 
@@ -267,24 +262,26 @@ const HomePage = () => {
             </div>
 
             <div className="space-y-4">
-              {discoverRoutes.map((route) => (
-                <div key={route.title} className="group flex gap-4 rounded-3xl border border-gray-100 p-3 transition hover:-translate-y-1 hover:shadow-lg">
-                  <img src={route.image} alt={route.title} className="h-24 w-24 rounded-2xl object-cover transition group-hover:scale-105" />
+              {popularEvents.length > 0 ? popularEvents.map((event, index) => (
+                <Link to={`/event/${event.id}`} key={event.id} className="group flex gap-4 rounded-3xl border border-gray-100 p-3 transition hover:-translate-y-1 hover:shadow-lg">
+                  <img src={getEventImage(event, index)} alt={event.title} className="h-24 w-24 rounded-2xl object-cover transition group-hover:scale-105" />
                   <div className="flex flex-1 items-center justify-between gap-3">
                     <div>
                       <h3 className="text-lg font-black">
-                        {route.title}
+                        {event.title}
                       </h3>
                       <p className="mt-1 text-sm text-gray-500">
-                        {t.home.by} {route.author}
+                        {event.sellerCompanyName || event.region || t.home.verifiedOrganizer}
                       </p>
                     </div>
                     <div className="rounded-full bg-rose-50 px-3 py-1 text-sm font-bold text-rose-600">
-                      {route.saves} {t.home.saves}
+                      ★ {Number(event.rating || 0).toFixed(1)}
                     </div>
                   </div>
-                </div>
-              ))}
+                </Link>
+              )) : (
+                <div className="rounded-2xl bg-gray-50 p-4 text-gray-500">{t.home.noRoutes}</div>
+              )}
             </div>
           </div>
         </section>

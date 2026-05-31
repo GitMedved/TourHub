@@ -1,10 +1,9 @@
 import LoadingScreen from '../components/LoadingScreen';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FaStar, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaArrowLeft, FaQuestionCircle, FaHeart, FaRegHeart, FaShareAlt } from 'react-icons/fa';
+import { FaStar, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaArrowLeft, FaQuestionCircle, FaHeart, FaRegHeart, FaShareAlt, FaClock, FaLink, FaVideo } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
-import Header from '../components/Header';
 
 const SellerEvents = ({ sellerId, currentEventId }) => {
   const [events, setEvents] = useState([]);
@@ -28,7 +27,7 @@ const SellerEvents = ({ sellerId, currentEventId }) => {
             <div className="h-32 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl">
               {event.previewImage ? <img src={`http://localhost:5001${event.previewImage}`} alt="" className="w-full h-full object-cover" /> : '🏔️'}
             </div>
-            <div className="p-3"><h3 className="font-medium text-sm text-gray-800 line-clamp-2">{event.title}</h3><p className="text-xs text-gray-500 mt-1">${parseFloat(event.price).toFixed(0)} • {event.durationDays}д</p></div>
+            <div className="p-3"><h3 className="font-medium text-sm text-gray-800 line-clamp-2">{event.title}</h3><p className="text-xs text-gray-500 mt-1">{parseFloat(event.price).toLocaleString('ru-RU')} ₽ • {event.durationDays}д</p></div>
           </Link>
         ))}
       </div>
@@ -291,7 +290,6 @@ const EventDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <div className="container mx-auto px-4 py-6">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 mb-4 hover:text-gray-700 text-sm"><FaArrowLeft /> Назад</button>
         
@@ -314,9 +312,41 @@ const EventDetailPage = () => {
             </div>
             
             <p className="text-gray-700 mb-6">{event.fullDescription || event.shortDescription}</p>
+
+            <div className="mb-6 grid grid-cols-1 gap-3 rounded-2xl bg-gray-50 p-4 text-sm text-gray-600 md:grid-cols-2">
+              {event.eventType && <div><span className="font-semibold text-gray-900">Вид:</span> {event.eventType}</div>}
+              {event.category && <div><span className="font-semibold text-gray-900">Категория:</span> {event.category}{event.subcategory ? ` / ${event.subcategory}` : ''}</div>}
+              {(event.startTime || event.endTime) && <div className="flex items-center gap-2"><FaClock className="text-blue-500" /> {event.startTime || '—'} — {event.endTime || '—'}</div>}
+              {event.meetingPoint && <div><span className="font-semibold text-gray-900">Место встречи:</span> {event.meetingPoint}</div>}
+              {event.latitude && event.longitude && <div><span className="font-semibold text-gray-900">Координаты:</span> {event.latitude}, {event.longitude}</div>}
+              {event.language && <div><span className="font-semibold text-gray-900">Язык:</span> {event.language}</div>}
+            </div>
+
+            {(event.images?.length > 0 || event.videos?.length > 0 || event.videoUrl || event.externalLinks?.length > 0) && (
+              <div className="mb-6 space-y-4 rounded-2xl border border-gray-100 p-4">
+                {event.images?.length > 0 && (
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    {event.images.map((image, index) => (
+                      <img key={`${image.url}-${index}`} src={`http://localhost:5001${image.url}`} alt="Галерея тура" className="h-28 w-full rounded-xl object-cover" />
+                    ))}
+                  </div>
+                )}
+                {event.videos?.length > 0 && (
+                  <div className="space-y-2">
+                    {event.videos.map((video, index) => (
+                      <a key={`${video.url}-${index}`} href={`http://localhost:5001${video.url}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 hover:underline"><FaVideo /> {video.originalName || 'Видео тура'}</a>
+                    ))}
+                  </div>
+                )}
+                {event.videoUrl && <a href={event.videoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 hover:underline"><FaVideo /> Смотреть видео</a>}
+                {event.externalLinks?.map((link, index) => (
+                  <a key={`${link}-${index}`} href={link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 hover:underline"><FaLink /> {link}</a>
+                ))}
+              </div>
+            )}
             
             <div className="flex items-center justify-between pt-4 border-t">
-              <div className="text-2xl font-bold text-blue-600">${parseFloat(event.price).toFixed(2)}</div>
+              <div className="text-2xl font-bold text-blue-600">{parseFloat(event.price).toLocaleString('ru-RU')} ₽</div>
               <div className="flex flex-wrap gap-3 justify-end">
                 <button onClick={toggleWishlist} disabled={wishlistLoading} className={`px-5 py-2.5 rounded-full text-sm font-medium transition flex items-center gap-2 ${wishlistSaved ? 'bg-rose-50 text-rose-600 hover:bg-rose-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
                   {wishlistSaved ? <FaHeart /> : <FaRegHeart />} {wishlistSaved ? 'Сохранено' : 'В избранное'}

@@ -5,6 +5,37 @@ if (!Event.associations.Seller) {
   Event.belongsTo(Seller, { foreignKey: 'sellerId', as: 'Seller' });
 }
 
+const normalizeList = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      return value
+        .split('\n')
+        .map(item => item.trim())
+        .filter(Boolean);
+    }
+  }
+
+  return [value];
+};
+
+const normalizeEventPayload = (body) => ({
+  ...body,
+  images: normalizeList(body.images),
+  videos: normalizeList(body.videos),
+  externalLinks: normalizeList(body.externalLinks),
+  durationDays: body.durationDays ? Number(body.durationDays) : undefined,
+  durationHours: body.durationHours ? Number(body.durationHours) : undefined,
+  maxParticipants: body.maxParticipants ? Number(body.maxParticipants) : undefined,
+  latitude: body.latitude ? Number(body.latitude) : undefined,
+  longitude: body.longitude ? Number(body.longitude) : undefined
+});
+
 const getAllEvents = async (req, res) => {
   try {
     const events = await Event.findAll({
@@ -53,8 +84,9 @@ const createEvent = async (req, res) => {
   try {
     const seller = await Seller.findOne({ where: { userId: req.user.id } });
     if (!seller) return res.status(400).json({ error: 'Seller profile not found' });
+    const payload = normalizeEventPayload(req.body);
     const event = await Event.create({
-      ...req.body, sellerId: seller.id,
+      ...payload, sellerId: seller.id,
       isPublished: false, moderationStatus: 'pending'
     });
     res.status(201).json(event);

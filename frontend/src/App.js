@@ -34,6 +34,7 @@ import ChatPage from './pages/ChatPage';
 import CreateEventPage from './pages/CreateEventPage';
 
 import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 import ErrorBoundary from './components/ErrorBoundary';
 import { LanguageProvider, useLanguage } from './i18n';
 
@@ -216,6 +217,8 @@ function AppContent() {
 
   return (
     <>
+
+      <Header />
 
       {showSidebar && (
         <Sidebar />

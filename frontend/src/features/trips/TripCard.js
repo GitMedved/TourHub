@@ -84,7 +84,7 @@ export default function TripCard({ trip }) {
       <div className="mt-6">
 
         <h3 className="font-semibold mb-3">
-          Places
+          Места
         </h3>
 
         <div className="space-y-3">
@@ -102,7 +102,7 @@ export default function TripCard({ trip }) {
                   </div>
 
                   <div className="text-sm text-gray-500">
-                    Score: {place.voteScore}
+                    Рейтинг: {place.voteScore}
                   </div>
                 </div>
 
@@ -146,7 +146,7 @@ export default function TripCard({ trip }) {
 
           <input
             type="text"
-            placeholder="Suggest place..."
+            placeholder="Предложить место..."
             value={placeForm.title}
             onChange={(e) => setPlaceForm({
               title: e.target.value
@@ -159,7 +159,7 @@ export default function TripCard({ trip }) {
             type="submit"
             className="bg-black text-white px-4 rounded-xl"
           >
-            Add
+            Добавить
           </button>
 
         </form>
@@ -169,7 +169,7 @@ export default function TripCard({ trip }) {
       <div className="mt-8">
 
         <h3 className="font-semibold mb-3">
-          Discussion
+          Обсуждение
         </h3>
 
         <div className="space-y-2">
@@ -198,7 +198,7 @@ export default function TripCard({ trip }) {
 
           <input
             type="text"
-            placeholder="Write comment..."
+            placeholder="Напишите комментарий..."
             value={comment}
             onChange={(e) => setComment(
               e.target.value
@@ -211,7 +211,7 @@ export default function TripCard({ trip }) {
             type="submit"
             className="bg-black text-white px-4 rounded-xl"
           >
-            Send
+            Отправить
           </button>
 
         </form>
