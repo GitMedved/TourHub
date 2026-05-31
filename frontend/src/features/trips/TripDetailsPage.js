@@ -125,7 +125,7 @@ export default function TripDetailsPage() {
   if (!trip) {
     return (
       <div className="p-10">
-        Trip not found
+        Поездка не найдена
       </div>
     );
   }
@@ -159,11 +159,11 @@ export default function TripDetailsPage() {
                   result.inviteUrl
                 );
 
-                alert('Invite link copied');
+                alert('Ссылка-приглашение скопирована');
               }}
               className="bg-blue-600 text-white px-4 py-2 rounded-xl"
             >
-              Invite people
+              Пригласить участников
             </button>
 
           </div>
@@ -177,14 +177,14 @@ export default function TripDetailsPage() {
             <div className="bg-white rounded-3xl p-6 shadow mb-6">
 
               <h2 className="text-2xl font-bold mb-4">
-                Add place
+                Добавить место
               </h2>
 
               <div className="space-y-4">
 
                 <input
                   type="text"
-                  placeholder="Place title"
+                  placeholder="Название места"
                   value={placeForm.title}
                   onChange={(e) =>
                     setPlaceForm({
@@ -196,7 +196,7 @@ export default function TripDetailsPage() {
                 />
 
                 <textarea
-                  placeholder="Description"
+                  placeholder="Описание"
                   value={placeForm.description}
                   onChange={(e) =>
                     setPlaceForm({
@@ -213,7 +213,7 @@ export default function TripDetailsPage() {
                   }
                   className="bg-black text-white px-6 py-3 rounded-xl"
                 >
-                  Add place
+                  Добавить место
                 </button>
 
               </div>
@@ -248,7 +248,7 @@ export default function TripDetailsPage() {
                       </div>
 
                       <div className="text-xs text-gray-400">
-                        votes
+                        голосов
                       </div>
 
                     </div>
@@ -266,7 +266,7 @@ export default function TripDetailsPage() {
                       }
                       className="bg-green-100 text-green-700 px-4 py-2 rounded-xl"
                     >
-                      👍 Vote
+                      👍 За
                     </button>
 
                     <button
@@ -278,7 +278,7 @@ export default function TripDetailsPage() {
                       }
                       className="bg-red-100 text-red-700 px-4 py-2 rounded-xl"
                     >
-                      👎 Skip
+                      👎 Пропустить
                     </button>
 
                   </div>
@@ -296,7 +296,7 @@ export default function TripDetailsPage() {
             <div className="bg-white rounded-3xl p-6 shadow">
 
               <h2 className="text-2xl font-bold mb-4">
-                Discussion
+                Обсуждение
               </h2>
 
               <div className="space-y-3 mb-6">
@@ -317,7 +317,7 @@ export default function TripDetailsPage() {
               <div className="space-y-4">
 
                 <textarea
-                  placeholder="Write message..."
+                  placeholder="Напишите сообщение..."
                   value={comment}
                   onChange={(e) =>
                     setComment(e.target.value)
@@ -333,7 +333,7 @@ export default function TripDetailsPage() {
                   }
                   className="bg-black text-white px-6 py-3 rounded-xl"
                 >
-                  Send
+                  Отправить
                 </button>
 
               </div>

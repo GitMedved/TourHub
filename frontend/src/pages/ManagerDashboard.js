@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { FaCalendarAlt, FaCheck, FaTimes, FaSearch, FaStore, FaCalendarCheck, FaComments, FaChevronDown, FaChevronUp, FaUser, FaHeadset, FaReply, FaEye, FaEdit, FaSave } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
-import Header from '../components/Header';
 
 const ManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState('bookings');
@@ -120,13 +119,12 @@ const ManagerDashboard = () => {
     }
   };
 
-  if (loading) return <div className="h-screen flex flex-col"><Header /><div className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-500 border-t-transparent"></div></div></div>;
+  if (loading) return <div className="h-screen flex flex-col"><div className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-500 border-t-transparent"></div></div></div>;
 
   const ic = "w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-blue-400 focus:outline-none";
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <div className="container mx-auto px-4 py-6">
         <div className="bg-white rounded-2xl shadow-sm p-4 mb-6"><h2 className="text-xl font-bold">👑 Панель управления</h2></div>
         <div className="flex gap-2 mb-6 flex-wrap">

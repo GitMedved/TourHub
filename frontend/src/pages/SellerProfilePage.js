@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FaStar, FaMapMarkerAlt, FaPhone, FaEnvelope, FaGlobe } from 'react-icons/fa';
 import api from '../services/api';
-import Header from '../components/Header';
 
 const SellerProfilePage = () => {
   const { id } = useParams();
@@ -36,8 +35,7 @@ const SellerProfilePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex items-center justify-center h-64">
+          <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         </div>
       </div>
@@ -47,8 +45,7 @@ const SellerProfilePage = () => {
   if (!seller) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="container mx-auto px-4 py-8 text-center">
+          <div className="container mx-auto px-4 py-8 text-center">
           <p className="text-gray-500">Продавец не найден</p>
         </div>
       </div>
@@ -61,7 +58,6 @@ const SellerProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <div className="container mx-auto px-4 py-6">
         {/* Профиль продавца */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">

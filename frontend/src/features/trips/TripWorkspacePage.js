@@ -261,7 +261,7 @@ export default function TripWorkspacePage() {
 
     return (
       <div className="p-8">
-        Loading...
+        Загрузка...
       </div>
     );
   }
@@ -270,7 +270,7 @@ export default function TripWorkspacePage() {
 
     return (
       <div className="p-8">
-        Trip not found
+        Поездка не найдена
       </div>
     );
   }
@@ -307,11 +307,11 @@ export default function TripWorkspacePage() {
                   result.inviteUrl
                 );
 
-                alert('Invite copied');
+                alert('Ссылка-приглашение скопирована');
               }}
               className="bg-black text-white px-5 py-3 rounded-2xl"
             >
-              Invite
+              Пригласить
             </button>
 
           </div>
@@ -319,7 +319,7 @@ export default function TripWorkspacePage() {
           <div className="mt-6">
 
             <div className="text-sm text-gray-400 mb-2">
-              Online users
+              Участники онлайн
             </div>
 
             <div className="flex gap-2 flex-wrap">
@@ -346,7 +346,7 @@ export default function TripWorkspacePage() {
             {typingUser && (
 
               <div className="mt-3 text-sm text-gray-500">
-                {typingUser.firstName} is typing...
+                {typingUser.firstName} печатает...
               </div>
             )}
 
@@ -361,7 +361,7 @@ export default function TripWorkspacePage() {
             <div className="bg-white rounded-3xl shadow-sm p-6">
 
               <h2 className="text-3xl font-bold mb-6">
-                Places
+                Места
               </h2>
 
               <form
@@ -378,7 +378,7 @@ export default function TripWorkspacePage() {
 
                 <input
                   type="text"
-                  placeholder="Place title"
+                  placeholder="Название места"
                   value={placeForm.title}
                   onChange={(e) =>
                     setPlaceForm({
@@ -392,7 +392,7 @@ export default function TripWorkspacePage() {
                 />
 
                 <textarea
-                  placeholder="Description"
+                  placeholder="Описание"
                   value={placeForm.description}
                   onChange={(e) =>
                     setPlaceForm({
@@ -408,7 +408,7 @@ export default function TripWorkspacePage() {
                   type="submit"
                   className="bg-black text-white px-5 py-3 rounded-2xl"
                 >
-                  Add place
+                  Добавить место
                 </button>
 
               </form>
@@ -482,7 +482,7 @@ export default function TripWorkspacePage() {
             <div className="bg-white rounded-3xl shadow-sm p-6">
 
               <h2 className="text-3xl font-bold mb-6">
-                Comments
+                Комментарии
               </h2>
 
               <form
@@ -512,7 +512,7 @@ export default function TripWorkspacePage() {
                       }
                     );
                   }}
-                  placeholder="Write comment..."
+                  placeholder="Напишите комментарий..."
                   className="w-full border p-4 rounded-2xl"
                 />
 
@@ -520,7 +520,7 @@ export default function TripWorkspacePage() {
                   type="submit"
                   className="mt-4 bg-black text-white px-5 py-3 rounded-2xl"
                 >
-                  Send
+                  Отправить
                 </button>
 
               </form>
@@ -538,7 +538,7 @@ export default function TripWorkspacePage() {
                       <div className="text-sm text-gray-400 mb-2">
 
                         {item.author?.firstName ||
-                          'User'}
+                          'Пользователь'}
 
                       </div>
 

@@ -12,9 +12,7 @@ const ROLE_CONFIG = {
 };
 
 const NAV_LINKS = [
-  { path: '/', labelKey: 'home' },
   { path: '/events', labelKey: 'events' },
-  { path: '/map', labelKey: 'map' },
 ];
 
 const Header = () => {

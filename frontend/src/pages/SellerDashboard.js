@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrash, FaChartBar, FaCalendarAlt, FaUsers, FaStar, FaCheck, FaTimes, FaEye, FaStore, FaRubleSign } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
-import Header from '../components/Header';
 
 const CATEGORIES = [
   { value: 'active', label: 'Активный отдых' },
@@ -180,7 +179,6 @@ const SellerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <div className="container mx-auto px-4 py-6 max-w-6xl">
 
         <div className="flex items-center gap-4 mb-6">

@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { FaSearch, FaStar, FaMapMarkerAlt, FaCalendar, FaClock, FaFilter, FaSortAmountDown, FaMountain, FaCompass, FaUmbrellaBeach } from 'react-icons/fa';
 import api from '../services/api';
 import { REGIONS, SEASONS, CATEGORIES } from '../data/regions';
-import Header from '../components/Header';
 
 const fallbackImages = [
   'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80',
@@ -68,7 +67,6 @@ const EventsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header />
 
       <section className="relative overflow-hidden bg-[#07111f] text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,#38bdf8,transparent_28%),radial-gradient(circle_at_80%_10%,#a855f7,transparent_30%),linear-gradient(135deg,#07111f,#172554)]" />

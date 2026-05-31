@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { FaCalendarAlt, FaHeadset, FaStar, FaCalendarCheck, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
-import Header from '../components/Header';
 import { useLanguage } from '../i18n';
 
 const CANCEL_REASONS = [
@@ -108,7 +107,6 @@ const ProfilePage = () => {
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <div className="flex items-center justify-center h-64">
         <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
@@ -117,7 +115,6 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <div className="container mx-auto px-4 py-6 max-w-4xl">
 
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">

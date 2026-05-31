@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  FaSave, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaImage,
-  FaMoneyBillWave, FaClock, FaGlobe, FaMountain, FaInfoCircle,
-  FaSearch, FaSpinner, FaCloudSun, FaTag, FaList, FaCheck
+import {
+  FaSave, FaMapMarkerAlt, FaImage, FaInfoCircle,
+  FaSearch, FaSpinner, FaCheck
 } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
-import Header from '../components/Header';
 
 const CATEGORIES = {
   'Экскурсии': ['Городские', 'Исторические', 'Архитектурные', 'Гастрономические', 'Ночные'],
@@ -33,6 +31,7 @@ const CreateEventPage = () => {
   
   const [formData, setFormData] = useState({
     title: '',
+    eventType: '',
     category: '',
     subcategory: '',
     shortDescription: '',
@@ -44,6 +43,8 @@ const CreateEventPage = () => {
     durationHours: '',
     startDate: '',
     endDate: '',
+    startTime: '',
+    endTime: '',
     season: '',
     difficulty: '',
     address: '',
@@ -57,10 +58,13 @@ const CreateEventPage = () => {
     requirements: '',
     meetingPoint: '',
     organizerNote: '',
+    externalLinks: '',
+    videoUrl: '',
   });
 
   const [previewImage, setPreviewImage] = useState(null);
   const [gallery, setGallery] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [previewUrl, setPreviewUrl] = useState('');
 
   // Геокодинг адреса
@@ -70,18 +74,19 @@ const CreateEventPage = () => {
     setGeocoding(true);
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formData.address)}&limit=1&countrycodes=ru`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent([formData.address, formData.city].filter(Boolean).join(', '))}&limit=1&addressdetails=1`
       );
       const data = await response.json();
       
       if (data.length > 0) {
         const location = data[0];
+        const address = location.address || {};
         setFormData(prev => ({
           ...prev,
           latitude: location.lat,
           longitude: location.lon,
-          region: location.state || location.region || prev.region,
-          city: location.city || location.town || location.village || prev.city,
+          region: address.state || address.region || address.county || prev.region,
+          city: address.city || address.town || address.village || address.municipality || prev.city,
           address: location.display_name || prev.address
         }));
         toast.success('Адрес найден и координаты заполнены');
@@ -122,6 +127,24 @@ const CreateEventPage = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleVideoUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    setVideos(prev => [...prev, ...files].slice(0, 5));
+  };
+
+  const removeVideo = (index) => {
+    setVideos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadMediaFile = async (file) => {
+    const mediaFormData = new FormData();
+    mediaFormData.append('image', file);
+    const uploadRes = await api.post('/upload/temp', mediaFormData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return uploadRes.data;
+  };
+
   const removeGalleryImage = (index) => {
     setGallery(prev => prev.filter((_, i) => i !== index));
   };
@@ -129,31 +152,43 @@ const CreateEventPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.category || !formData.price) {
+    if (!formData.title || !formData.eventType || !formData.category || !formData.price || !formData.address) {
       toast.error('Заполните обязательные поля');
       return;
     }
 
     setLoading(true);
     try {
-      const formDataToSend = new FormData();
-      
-      // Добавляем все поля
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value) formDataToSend.append(key, value);
-      });
+      const payload = Object.fromEntries(
+        Object.entries(formData).filter(([, value]) => value !== '' && value !== null && value !== undefined)
+      );
 
-      // Загружаем изображения
+      payload.externalLinks = formData.externalLinks
+        .split('\n')
+        .map(link => link.trim())
+        .filter(Boolean);
+
+      const uploadedImages = [];
       if (previewImage) {
-        const imageFormData = new FormData();
-        imageFormData.append('image', previewImage);
-        const uploadRes = await api.post('/upload', imageFormData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        formDataToSend.append('previewImage', uploadRes.data.url || uploadRes.data.path);
+        const uploadRes = await uploadMediaFile(previewImage);
+        payload.previewImage = uploadRes.url || uploadRes.path;
+        uploadedImages.push({ url: uploadRes.url || uploadRes.path, originalName: previewImage.name, type: 'preview' });
       }
 
-      await api.post('/events', formDataToSend);
+      for (const item of gallery) {
+        const uploadRes = await uploadMediaFile(item.file);
+        uploadedImages.push({ url: uploadRes.url || uploadRes.path, originalName: item.file.name, type: 'gallery' });
+      }
+      payload.images = uploadedImages;
+
+      const uploadedVideos = [];
+      for (const file of videos) {
+        const uploadRes = await uploadMediaFile(file);
+        uploadedVideos.push({ url: uploadRes.url || uploadRes.path, originalName: file.name });
+      }
+      payload.videos = uploadedVideos;
+
+      await api.post('/events', payload);
       toast.success('Событие создано и отправлено на модерацию');
       navigate('/seller');
     } catch (error) {
@@ -170,7 +205,6 @@ const CreateEventPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <h1 className="text-2xl font-bold mb-6">Создание события</h1>
@@ -215,7 +249,23 @@ const CreateEventPage = () => {
                 <p className="text-xs text-gray-400 mt-1">{formData.title.length}/200 символов</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Вид мероприятия *</label>
+                  <select
+                    value={formData.eventType}
+                    onChange={(e) => updateField('eventType', e.target.value)}
+                    className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Выберите вид</option>
+                    <option value="Групповое">Групповое</option>
+                    <option value="Индивидуальное">Индивидуальное</option>
+                    <option value="Онлайн">Онлайн</option>
+                    <option value="Самостоятельное">Самостоятельное</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium mb-1">Категория *</label>
                   <select
@@ -377,7 +427,7 @@ const CreateEventPage = () => {
                   <div className="text-center">
                     <FaMapMarkerAlt className="text-4xl mb-2 text-red-400 mx-auto" />
                     <p>Координаты: {formData.latitude}, {formData.longitude}</p>
-                    <p className="text-sm">Карта будет доступна после активации API ключа</p>
+                    <p className="text-sm">После модерации тур автоматически появится на карте по этим координатам.</p>
                   </div>
                 </div>
               )}
@@ -411,7 +461,7 @@ const CreateEventPage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Дата начала</label>
                   <input type="date" value={formData.startDate}
@@ -422,6 +472,18 @@ const CreateEventPage = () => {
                   <label className="block text-sm font-medium mb-1">Дата окончания</label>
                   <input type="date" value={formData.endDate}
                     onChange={(e) => updateField('endDate', e.target.value)}
+                    className="w-full border rounded-xl px-4 py-3" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Время начала</label>
+                  <input type="time" value={formData.startTime}
+                    onChange={(e) => updateField('startTime', e.target.value)}
+                    className="w-full border rounded-xl px-4 py-3" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Время окончания</label>
+                  <input type="time" value={formData.endTime}
+                    onChange={(e) => updateField('endTime', e.target.value)}
                     className="w-full border rounded-xl px-4 py-3" />
                 </div>
               </div>
@@ -486,6 +548,36 @@ const CreateEventPage = () => {
                   <input id="galleryInput" type="file" accept="image/*" className="hidden"
                     onChange={(e) => handleImageUpload(e, 'gallery')} />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Видео (до 5 файлов)</label>
+                <input type="file" accept="video/*" multiple onChange={handleVideoUpload}
+                  className="w-full border rounded-xl px-4 py-3" />
+                {videos.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {videos.map((video, index) => (
+                      <div key={`${video.name}-${index}`} className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-2 text-sm">
+                        <span>{video.name}</span>
+                        <button type="button" onClick={() => removeVideo(index)} className="text-red-500">Удалить</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Ссылка на видео</label>
+                <input type="url" value={formData.videoUrl} onChange={(e) => updateField('videoUrl', e.target.value)}
+                  placeholder="https://youtube.com/..."
+                  className="w-full border rounded-xl px-4 py-3" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Полезные ссылки</label>
+                <textarea value={formData.externalLinks} onChange={(e) => updateField('externalLinks', e.target.value)}
+                  placeholder="Добавьте каждую ссылку с новой строки"
+                  className="w-full border rounded-xl px-4 py-3 h-24" />
               </div>
 
               <div>

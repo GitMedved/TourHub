@@ -7,9 +7,9 @@ const FILTERS = ['all', 'planning', 'active', 'archived'];
 const SORTS = ['newest', 'oldest', 'upcoming', 'last_modified'];
 
 function formatDateRange(trip) {
-  if (!trip.startDate || !trip.endDate) return 'Dates to be planned';
-  const start = new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  const end = new Date(trip.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  if (!trip.startDate || !trip.endDate) return 'Даты будут добавлены позже';
+  const start = new Date(trip.startDate).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+  const end = new Date(trip.endDate).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric', year: 'numeric' });
   return `${start} - ${end}`;
 }
 
@@ -74,24 +74,24 @@ export default function TripsPage() {
     <main className="th-page">
       <header className="th-header">
         <div>
-          <span className="th-chip" aria-label="Members online now">● Real-time collaborative workspace</span>
-          <h1>My Trips</h1>
-          <p>Plan and coordinate adventures with your group in one place.</p>
+          <span className="th-chip" aria-label="Участники онлайн">● Совместное планирование в реальном времени</span>
+          <h1>Мои поездки</h1>
+          <p>Планируйте маршруты и согласовывайте путешествия с группой в одном месте.</p>
         </div>
       </header>
 
-      <section className="th-surface th-create-section" aria-label="Create a new trip">
+      <section className="th-surface th-create-section" aria-label="Создание новой поездки">
         <div className="th-create-title-wrap">
-          <h2>Create New Trip</h2>
-          <p>Start with a name and destination. You can add dates and members next.</p>
+          <h2>Создать новую поездку</h2>
+          <p>Начните с названия и направления. Даты и участников можно добавить позже.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="th-create-grid">
           <label className="th-field">
-            <span>Trip Name</span>
+            <span>Название поездки</span>
             <input
               type="text"
-              placeholder="Summer Adventure 2026"
+              placeholder="Летнее приключение 2026"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               required
@@ -99,10 +99,10 @@ export default function TripsPage() {
           </label>
 
           <label className="th-field">
-            <span>Destination</span>
+            <span>Направление</span>
             <input
               type="text"
-              placeholder="Paris, France"
+              placeholder="Париж, Франция"
               value={form.destination}
               onChange={(e) => setForm({ ...form, destination: e.target.value })}
               required
@@ -110,13 +110,13 @@ export default function TripsPage() {
           </label>
 
           <button className="th-btn th-btn-primary" type="submit" disabled={createTripMutation.isPending}>
-            {createTripMutation.isPending ? 'Creating...' : 'Create Trip'}
+            {createTripMutation.isPending ? 'Создаём...' : 'Создать поездку'}
           </button>
         </form>
       </section>
 
-      <section className="th-toolbar th-surface" aria-label="Trip filters and sort">
-        <div className="th-tabs" role="tablist" aria-label="Trips filters">
+      <section className="th-toolbar th-surface" aria-label="Фильтры и сортировка поездок">
+        <div className="th-tabs" role="tablist" aria-label="Фильтры поездок">
           {FILTERS.map((item) => (
             <button
               key={item}
@@ -126,7 +126,7 @@ export default function TripsPage() {
               className={`th-tab ${filter === item ? 'is-active' : ''}`}
               onClick={() => setFilter(item)}
             >
-              {item === 'all' ? 'All' : item[0].toUpperCase() + item.slice(1)}
+              {({ all: 'Все', planning: 'Планирование', active: 'Активные', archived: 'Архив' }[item] || item)}
             </button>
           ))}
         </div>
@@ -134,16 +134,16 @@ export default function TripsPage() {
         <div className="th-toolbar-right">
           <input
             type="search"
-            placeholder="Search trips..."
+            placeholder="Поиск поездок..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="th-search"
-            aria-label="Search trips"
+            aria-label="Поиск поездок"
           />
 
-          <select className="th-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Sort trips">
+          <select className="th-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Сортировка поездок">
             {SORTS.map((sortKey) => (
-              <option key={sortKey} value={sortKey}>{sortKey.replace('_', ' ')}</option>
+              <option key={sortKey} value={sortKey}>{({ newest: 'Сначала новые', oldest: 'Сначала старые', upcoming: 'По дате начала', last_modified: 'Недавно изменённые' }[sortKey] || sortKey)}</option>
             ))}
           </select>
         </div>
@@ -151,13 +151,13 @@ export default function TripsPage() {
 
       {isError && (
         <section className="th-state th-surface" role="alert">
-          <h3>Failed to load trips</h3>
-          <p>{error?.message || 'Check your connection and try again.'}</p>
+          <h3>Не удалось загрузить поездки</h3>
+          <p>{error?.message || 'Проверьте соединение и попробуйте ещё раз.'}</p>
         </section>
       )}
 
       {isLoading ? (
-        <section className="th-grid" aria-label="Loading trips">
+        <section className="th-grid" aria-label="Загрузка поездок">
           {Array.from({ length: 6 }).map((_, idx) => (
             <article key={idx} className="th-card th-skeleton-card" aria-hidden="true">
               <div className="th-skeleton th-skeleton-cover" />
@@ -168,21 +168,21 @@ export default function TripsPage() {
         </section>
       ) : visibleTrips.length === 0 ? (
         <section className="th-state th-surface">
-          <h3>Plan your first adventure</h3>
-          <p>Create a trip and invite friends to collaborate in real-time.</p>
+          <h3>Запланируйте первое приключение</h3>
+          <p>Создайте поездку и пригласите друзей для совместного планирования.</p>
         </section>
       ) : (
-        <section className="th-grid" aria-label="Trips list">
+        <section className="th-grid" aria-label="Список поездок">
           {visibleTrips.map((trip) => (
             <Link key={trip.id} to={`/trips/${trip.id}`} className="th-card-link">
-              <article className="th-card" aria-label={`Open ${trip.title}`}>
+              <article className="th-card" aria-label={`Открыть ${trip.title}`}>
                 <div className="th-card-cover" />
                 <div className="th-card-body">
-                  <span className="th-badge">{(trip.status || 'planning').toLowerCase()}</span>
+                  <span className="th-badge">{{ planning: 'Планирование', active: 'Активная', archived: 'Архив' }[(trip.status || 'planning').toLowerCase()] || (trip.status || 'planning')}</span>
                   <h3>{trip.title}</h3>
                   <p>{formatDateRange(trip)}</p>
                   <div className="th-card-meta">
-                    <span>📍 {trip.places?.length || 0} places</span>
+                    <span>📍 {trip.places?.length || 0} мест</span>
                     <span>💬 {trip.comments?.length || 0}</span>
                   </div>
                 </div>
